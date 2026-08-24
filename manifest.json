@@ -1,0 +1,14 @@
+{
+  "name": "OHND Race Host Game Hub",
+  "short_name": "OHND Hub",
+  "description": "Movie lookup, dad jokes, would-you-rather, and the OHND Discord — all in one place.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7a3fb0",
+  "icons": [
+    { "src": "ohnd-logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ohnd-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

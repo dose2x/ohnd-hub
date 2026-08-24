@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>OHND Race Host Game Hub</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7a3fb0">
+<link rel="icon" type="image/png" href="ohnd-logo.png">
+<link rel="apple-touch-icon" href="ohnd-logo.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="OHND Hub">
+<style>
+  :root {
+    --purple-dark: #3d1660;
+    --purple: #7a3fb0;
+    --purple-mid: #9a5fd0;
+    --purple-light: #f2e9fb;
+    --white: #ffffff;
+    --text: #2a1440;
+    --muted: #6b5a85;
+    --accent: #f5b700;
+    --accent-dark: #d69e00;
+    --fresh: #16a34a;
+    --rotten: #dc2626;
+    --border: #e3d5f5;
+    --shadow: rgba(61, 22, 96, 0.22);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(160deg, var(--white) 0%, var(--purple-light) 55%, var(--purple-mid) 160%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    flex-shrink: 0;
+  }
+  .app-header img {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--purple);
+    box-shadow: 0 0 12px rgba(122, 63, 176, 0.4);
+  }
+  .app-header span {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--purple-dark);
+  }
+
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 20px calc(100px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .screen { display: none; max-width: 560px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  h1.screen-title {
+    font-size: 1.5rem;
+    margin: 8px 0 2px;
+    color: var(--purple-dark);
+  }
+  .screen-subtitle {
+    color: var(--purple);
+    opacity: 0.8;
+    margin: 0 0 20px;
+    font-size: 0.9rem;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--purple-dark);
+    padding: 15px 34px;
+    font-size: 1.02rem;
+    font-weight: 700;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(245, 183, 0, 0.4);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:active { transform: scale(0.96); }
+  .btn-primary:disabled {
+    background: var(--border);
+    color: var(--muted);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  /* ---------- Jokes & WYR shared card ---------- */
+  .card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 34px 26px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 12px 30px var(--shadow);
+    border: 2px solid var(--purple-mid);
+    margin-bottom: 22px;
+    transition: transform 0.15s ease;
+  }
+  .card.pop { transform: scale(1.02); }
+  .card-text { font-size: 1.2rem; line-height: 1.5; }
+
+  .action-row { text-align: center; }
+  .counter {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--purple);
+    opacity: 0.75;
+    text-align: center;
+  }
+
+  /* ---------- Would You Rather ---------- */
+  .wyr-category {
+    display: inline-block;
+    background: var(--purple-light);
+    color: var(--purple);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 14px;
+  }
+  .wyr-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 26px 22px;
+    box-shadow: 0 12px 30px var(--shadow);
+    border: 2px solid var(--purple-mid);
+    margin-bottom: 22px;
+    text-align: center;
+    transition: transform 0.15s ease;
+  }
+  .wyr-card.pop { transform: scale(1.02); }
+  .wyr-option {
+    background: var(--purple-light);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .wyr-or {
+    color: var(--accent-dark);
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    margin: 10px 0;
+  }
+
+  /* ---------- Movie Guide ---------- */
+  .search-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--purple); }
+  .btn-search {
+    background: var(--accent);
+    color: var(--purple-dark);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .btn-search:hover { background: var(--accent-dark); }
+
+  #movieStatus { color: var(--muted); font-size: 0.9rem; margin: 16px 0 10px; min-height: 1.2em; }
+  #movieStatus.error { color: var(--rotten); }
+
+  .movie-card {
+    display: none;
+    background: var(--white);
+    border: 2px solid var(--purple-mid);
+    border-radius: 16px;
+    padding: 22px;
+    margin-top: 8px;
+    gap: 18px;
+    grid-template-columns: 120px 1fr;
+    box-shadow: 0 12px 30px var(--shadow);
+  }
+  .movie-card.visible { display: grid; }
+  .movie-card img.poster {
+    width: 120px;
+    border-radius: 10px;
+    background: var(--purple-light);
+    align-self: start;
+  }
+  .movie-card .info h2 { margin: 0 0 2px; font-size: 1.25rem; }
+  .movie-card .info .meta { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+  .scores { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .score-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--purple-light);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 0.8rem;
+  }
+  .score-pill .val { font-weight: 700; color: var(--text); }
+  .score-pill .val.fresh { color: var(--fresh); }
+  .score-pill .val.rotten { color: var(--rotten); }
+  .movie-section { margin-bottom: 12px; }
+  .movie-section h3 {
+    margin: 0 0 3px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+  .movie-section p { margin: 0; line-height: 1.45; font-size: 0.9rem; }
+  @media (max-width: 420px) {
+    .movie-card { grid-template-columns: 1fr; }
+    .movie-card img.poster { width: 100%; max-width: 180px; margin: 0 auto; }
+  }
+
+  /* ---------- Discord / Website placeholder screens ---------- */
+  .placeholder-screen {
+    text-align: center;
+    padding-top: 20px;
+  }
+  .placeholder-icon {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: var(--purple-light);
+    border: 2px solid var(--purple-mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--purple);
+  }
+  .placeholder-icon svg { width: 44px; height: 44px; }
+  .placeholder-screen p {
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  /* ---------- Bottom tab bar ---------- */
+  nav.tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    box-shadow: 0 -4px 18px var(--shadow);
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
+  }
+  .tab-btn {
+    flex: 1;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 2px 8px;
+    color: var(--muted);
+    font-size: 0.66rem;
+    font-weight: 600;
+  }
+  .tab-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .tab-btn.active { color: var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <img src="ohnd-logo.png" alt="OHND logo">
+  <span>OHND Race Host Game Hub</span>
+</div>
+
+<main>
+
+  <!-- MOVIE GUIDE -->
+  <section class="screen active" id="screen-movies">
+    <h1 class="screen-title">Movie Guide</h1>
+    <p class="screen-subtitle">Rotten Tomatoes score, synopsis &amp; cast in one search</p>
+
+    <div class="search-row">
+      <input type="text" id="movieQuery" placeholder="Search a movie title (e.g. The Matrix)" autocomplete="off">
+      <button class="btn-search" id="movieSearchBtn">Search</button>
+    </div>
+    <div id="movieStatus"></div>
+
+    <div class="movie-card" id="movieCard">
+      <img class="poster" id="moviePoster" src="" alt="Poster">
+      <div class="info">
+        <h2 id="movieTitle"></h2>
+        <div class="meta" id="movieMeta"></div>
+        <div class="scores" id="movieScores"></div>
+        <div class="movie-section">
+          <h3>Synopsis</h3>
+          <p id="moviePlot"></p>
+        </div>
+        <div class="movie-section">
+          <h3>Actors</h3>
+          <p id="movieActors"></p>
+        </div>
+        <div class="movie-section">
+          <h3>Director</h3>
+          <p id="movieDirector"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAD JOKES -->
+  <section class="screen" id="screen-jokes">
+    <h1 class="screen-title">Dad Jokes</h1>
+    <p class="screen-subtitle">Push it. You know you want to.</p>
+    <div class="card" id="jokeCard">
+      <div class="card-text" id="jokeText">Press the button for a dad joke.</div>
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" id="jokeBtn">Tell Me a Dad Joke</button>
+    </div>
+    <div class="counter" id="jokeCounter"></div>
+  </section>
+
+  <!-- WOULD YOU RATHER -->
+  <section class="screen" id="screen-wyr">
+    <h1 class="screen-title">Would You Rather</h1>
+    <p class="screen-subtitle">Tap for a tough call.</p>
+    <div class="wyr-card" id="wyrCard">
+      <div class="card-text" id="wyrPlaceholder">Press the button for a dilemma.</div>
+      <div id="wyrContent" style="display:none;">
+        <div class="wyr-category" id="wyrCategory"></div>
+        <div class="wyr-option" id="wyrOptionA"></div>
+        <div class="wyr-or">OR</div>
+        <div class="wyr-option" id="wyrOptionB"></div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" id="wyrBtn">Would You Rather...?</button>
+    </div>
+    <div class="counter" id="wyrCounter"></div>
+  </section>
+
+  <!-- DISCORD -->
+  <section class="screen placeholder-screen" id="screen-discord">
+    <div class="placeholder-icon">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><circle cx="16" cy="10.5" r="2.6"/><path d="M4 19c0-3 2.5-5 5-5s5 2 5 5"/><path d="M13.5 19c.3-2 1.7-3.5 3.5-3.5 2 0 3.5 1.5 4 3.5"/></svg>
+    </div>
+    <h1 class="screen-title">Join the Community</h1>
+    <p>Hang out with other OHND racers and hosts, get event updates, and talk shop on Discord.</p>
+    <button class="btn-primary" id="discordBtn">Open Discord</button>
+  </section>
+
+  <!-- WEBSITE -->
+  <section class="screen placeholder-screen" id="screen-website">
+    <div class="placeholder-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 4 5.7 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.7-4-9s1.5-6.5 4-9z"/></svg>
+    </div>
+    <h1 class="screen-title">Official Website</h1>
+    <p>The OHND website is still in the garage. Check back after launch.</p>
+    <button class="btn-primary" id="websiteBtn" disabled>Coming Soon</button>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-screen="movies">
+    <svg viewBox="0 0 24 24"><path d="M3 8.5h18"/><path d="M3 8.5 5 4l3 1-1.6 3.5"/><path d="M8.3 8.5 10.8 4l3 1-1.5 3.5"/><path d="M13.6 8.5 16 4l3 1-1.6 3.5"/><rect x="3" y="8.5" width="18" height="11.5" rx="1.5"/></svg>
+    <span>Movies</span>
+  </button>
+  <button class="tab-btn" data-screen="jokes">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.7" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15.3" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M7.5 14.2c1.2 1.7 3 2.6 4.5 2.6s3.3-.9 4.5-2.6"/></svg>
+    <span>Jokes</span>
+  </button>
+  <button class="tab-btn" data-screen="wyr">
+    <svg viewBox="0 0 24 24"><path d="M3 6h4l5 12h6"/><path d="M14 6h4"/><path d="M3 18h4l3-7"/><path d="M18 3l3 3-3 3"/><path d="M18 15l3 3-3 3"/></svg>
+    <span>WYR</span>
+  </button>
+  <button class="tab-btn" data-screen="discord">
+    <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><circle cx="16" cy="10.5" r="2.6"/><path d="M4 19c0-3 2.5-5 5-5s5 2 5 5"/><path d="M13.5 19c.3-2 1.7-3.5 3.5-3.5 2 0 3.5 1.5 4 3.5"/></svg>
+    <span>Discord</span>
+  </button>
+  <button class="tab-btn" data-screen="website">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 4 5.7 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.7-4-9s1.5-6.5 4-9z"/></svg>
+    <span>Website</span>
+  </button>
+</nav>
+
+<script>
+/* ---------- Tab switching ---------- */
+const SCREENS = ["movies", "jokes", "wyr", "discord", "website"];
+function showScreen(name) {
+  SCREENS.forEach(s => {
+    document.getElementById("screen-" + s).classList.toggle("active", s === name);
+  });
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.screen === name);
+  });
+  document.querySelector("main").scrollTop = 0;
+}
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => showScreen(btn.dataset.screen));
+});
+
+/* ---------- Discord ---------- */
+const DISCORD_URL = "https://discord.gg/H8xzKg7hn";
+document.getElementById("discordBtn").addEventListener("click", () => {
+  window.open(DISCORD_URL, "_blank", "noopener,noreferrer");
+});
+
+/* ---------- Dad Jokes ---------- */
+const jokes = [
+  "I'm tired of following my dreams. I'm just going to ask them where they are going and meet up with them later.",
+  "Did you hear about the guy whose whole left side was cut off? He's all right now.",
+  "Why didn't the skeleton cross the road? Because he had no guts.",
+  "What did one nut say as he chased another nut? I'm a cashew!",
+  "Chances are if you' ve seen one shopping center, you've seen a mall.",
+  "I knew I shouldn't steal a mixer from work, but it was a whisk I was willing to take.",
+  "How come the stadium got hot after the game? Because all of the fans left.",
+  "Why was it called the dark ages? Because of all the knights.",
+  "A steak pun is a rare medium well done.",
+  "Why did the tomato blush? Because it saw the salad dressing.",
+  "Did you hear the joke about the wandering nun? She was a roman catholic.",
+  "What creature is smarter than a talking parrot? A spelling bee.",
+  "I'll tell you what often gets over looked... garden fences.",
+  "Why did the kid cross the playground? To get to the other slide.",
+  "Why do birds fly south for the winter? Because it's too far to walk.",
+  "What is a centipedes's favorite Beatle song? I want to hold your hand, hand, hand, hand...",
+  "My first time using an elevator was an uplifting experience. The second time let me down.",
+  "To be Frank, I'd have to change my name.",
+  "Slept like a log last night … woke up in the fireplace.",
+  "Why does a Moon-rock taste better than an Earth-rock? Because it's a little meteor.",
+  "I thought my wife was joking when she said she'd leave me if I didn't stop signing \"I'm A Believer\"... Then I saw her face.",
+  "I'm only familiar with 25 letters in the English language. I don't know why.",
+  "What do you call two barracuda fish? A Pairacuda!",
+  "What did the father tomato say to the baby tomato whilst on a family walk? Ketchup.",
+  "Why is Peter Pan always flying? Because he Neverlands.",
+  "What do you do on a remote island? Try and find the TV island it belongs to.",
+  "Did you know that protons have mass? I didn't even know they were catholic.",
+  "Dad I'm hungry' … ‘Hi hungry I'm dad",
+  "I was fired from the keyboard factory yesterday. I wasn't putting in enough shifts.",
+  "Whoever invented the knock-knock joke should get a no bell prize.",
+  "Wife: Honey I'm pregnant. Me: Well…. what do we do now? Wife: Well, I guess we should go to a baby doctor. Me: Hm.. I think I'd be a lot more comfortable going to an adult doctor.",
+  "When will the little snake arrive? I don't know but he won't be long...",
+  "Why was Pavlov's beard so soft? Because he conditioned it.",
+  "Do I enjoy making courthouse puns? Guilty",
+  "Why did the kid throw the clock out the window? He wanted to see time fly!",
+  "Hear about the new restaurant called Karma? There's no menu: You get what you deserve.",
+  "Why couldn't the kid see the pirate movie? Because it was rated arrr!",
+  "Man, I really love my furniture... me and my recliner go way back.",
+  "What did the traffic light say to the car as it passed? \"Don't look I'm changing!\"",
+  "My son is studying to be a surgeon, I just hope he makes the cut.",
+  "Why did the man run around his bed? Because he was trying to catch up on his sleep!",
+  "What did one wall say to the other wall? I'll meet you at the corner!",
+  "Sometimes I tuck my knees into my chest and lean forward. That's just how I roll.",
+  "Conjunctivitis.com – now that's a site for sore eyes.",
+  "How many South Americans does it take to change a lightbulb? A Brazilian",
+  "I don't trust stairs. They're always up to something.",
+  "Why was the robot angry? Because someone kept pressing his buttons!",
+  "Which is the fastest growing city in the world? Dublin'",
+  "A police officer caught two kids playing with a firework and a car battery. He charged one and let the other one off.",
+  "What is the difference between ignorance and apathy? I don't know and I don't care.",
+  "I went to a Foo Fighters Concert once... It was Everlong...",
+  "Some people eat light bulbs. They say it's a nice light snack.",
+  "I went to the store to pick up eight cans of sprite... when I got home I realized I'd only picked seven up",
+  "I cut my finger chopping cheese, but I think that I may have grater problems.",
+  "Last night me and my girlfriend watched three DVDs back to back. Luckily I was the one facing the TV.",
+  "I got a reversible jacket for Christmas, I can't wait to see how it turns out.",
+  "What did Romans use to cut pizza before the rolling cutter was invented? Lil Caesars",
+  "My pet mouse 'Elvis' died last night. He was caught in a trap..",
+  "Never take advice from electrons. They are always negative.",
+  "Why are oranges the smartest fruit? Because they are made to concentrate.",
+  "What did the beaver say to the tree? It's been nice gnawing you.",
+  "How do you fix a damaged jack-o-lantern? You use a pumpkin patch.",
+  "What did the late tomato say to the early tomato? I'll ketch up",
+  "I have kleptomania, but when it gets bad, I take something for it.",
+  "I used to be addicted to soap, but I'm clean now.",
+  "When is a door not a door? When it's ajar.",
+  "I made a belt out of watches once... It was a waist of time.",
+  "Why did Mozart kill all his chickens? Because when he asked them who the best composer was, they'd all say \"Bach bach bach!\"",
+  "This furniture store keeps emailing me, all I wanted was one night stand!",
+  "How do you find Will Smith in the snow? Look for fresh prints.",
+  "My sister bet me $15 that I couldn't build a car out of spaghetti. You should have seen the look on her face as I drove pasta.",
+  "My boss told me to have a good day... so I went home.",
+  "I just read a book about Stockholm syndrome. It was pretty bad at first, but by the end I liked it.",
+  "Why do trees seem suspicious on sunny days? Dunno, they're just a bit shady.",
+  "If at first you don't succeed, sky diving is not for you!",
+  "I'd like to start a diet, but I've got too much on my plate right now.",
+  "What kind of music do mummy's like? Rap",
+  "What's large, grey, and doesn't matter? An irrelephant.",
+  "A book just fell on my head. I only have my shelf to blame.",
+  "What did the dog say to the two trees? Bark bark.",
+  "If a child refuses to sleep during nap time, are they guilty of resisting a rest?",
+  "Why can't your nose be 12 inches long? Because then it'd be a foot!",
+  "Have you ever heard of a music group called Cellophane? They mostly wrap.",
+  "What do you call a boy who stopped digging holes? Douglas.",
+  "What did the mountain climber name his son? Cliff.",
+  "Why should you never trust a pig with a secret? Because it's bound to squeal.",
+  "Why are mummys scared of vacation? They're afraid to unwind.",
+  "Whiteboards ... are remarkable.",
+  "What kind of dinosaur loves to sleep? A stega-snore-us.",
+  "What has three letters and starts with gas? A Car.",
+  "What's Forest Gump's Facebook password? 1forest1",
+  "What kind of tree fits in your hand? A palm tree!",
+  "Whenever the cashier at the grocery store asks my dad if he would like the milk in a bag he replies, ‘No, just leave it in the carton!'",
+  "I used to be addicted to the hokey pokey, but I turned myself around.",
+  "How many tickles does it take to tickle an octopus? Ten-tickles!",
+  "Me: If humans lose the ability to hear high frequency volumes as they get older, can my 4 week old son hear a dog whistle? Doctor: No, humans can never hear that high of a frequency no matter what age they are. Me: Trick question... dogs can't whistle.",
+  "What musical instrument is found in the bathroom? A tuba toothpaste.",
+  "My boss told me to attach two pieces of wood together... I totally nailed it!",
+  "What was the pumpkin's favorite sport? Squash.",
+  "Recent survey revealed 6 out of 7 dwarf's aren't happy.",
+  "What do you call corn that joins the army? Kernel.",
+  "I've been trying to come up with a dad joke about momentum . . . but I just can't seem to get it going.",
+  "‘Put the cat out' … ‘I didn't realize it was on fire",
+  "Why don't skeletons ride roller coasters? They don't have the stomach for it.",
+  "Is there a hole in your shoe? No… Then how'd you get your foot in it?",
+  "Every night at 11:11, I make a wish that someone will come fix my broken clock.",
+  "Two muffins were sitting in an oven, and the first looks over to the second, and says, “man, it's really hot in here”. The second looks over at the first with a surprised look, and answers, “WHOA, a talking muffin!”",
+  "What's the difference between a guitar and a fish? You can tune a guitar but you can't \"tuna\" fish!",
+  "Did you hear that the police have a warrant out on a midget psychic ripping people off? It reads “Small medium at large.”",
+  "Why don't sharks eat clowns? Because they taste funny.",
+  "Just read a few facts about frogs. They were ribbiting.",
+  "Two satellites decided to get married. The wedding wasn't much, but the reception was incredible.",
+  "What do you call a fish with no eyes? A fsh.",
+  "What do you get if you put a duck in a cement mixer? Quacks in the pavement.",
+  "They tried to make a diamond shaped like a duck. It quacked under the pressure.",
+  "Where's the bin? Dad: I haven't been anywhere!",
+  "How do you make a water bed more bouncy. You use Spring Water",
+  "I considered building the patio by myself. But I didn't have the stones.",
+  "In my career as a lumberjack I cut down exactly 52,487 trees. I know because I kept a log.",
+  "Why do bears have hairy coats? Fur protection.",
+  "What do you get when you cross a bee and a sheep? A bah-humbug.",
+  "What did one snowman say to the other snow man? Do you smell carrot?",
+  "Why do bees hum? Because they don't know the words.",
+  "What do you call a troublesome Canadian high schooler? A poutine.",
+  "A magician was driving down the street and then he turned into a driveway.",
+  "Don't trust atoms. They make up everything.",
+  "If you walk into a forest and cut down a tree, but the tree doesn't understand why you cut it down, do you think it's stumped?",
+  "Where do bees go to the bathroom? The BP station.",
+  "What is the best way to carve? Whittle by whittle.",
+  "Why did the tree go to the dentist? It needed a root canal.",
+  "It was raining cats and dogs the other day. I almost stepped in a poodle.",
+  "Why do bananas have to put on sunscreen before they go to the beach? Because they might peel!",
+  "What do you call a bee that lives in America? A USB.",
+  "I was wondering why the frisbee was getting bigger, then it hit me.",
+  "A farmer had 297 cows, when he rounded them up, he found he had 300",
+  "What's the difference between a hippo and a zippo? One is really heavy, the other is a little lighter.",
+  "Somebody stole my Microsoft Office and they're going to pay - you have my Word.",
+  "What concert costs only 45 cents? 50 cent featuring Nickelback.",
+  "I couldn't figure out how the seat belt worked. Then it just clicked.",
+  "What did the green grape say to the purple grape? BREATH!!",
+  "What do you call a dad that has fallen through the ice? A Popsicle.",
+  "Two parrots are sitting on a perch. One turns to the other and asks, \"do you smell fish?\"",
+  "Bad at golf? Join the club.",
+  "I had a pair of racing snails. I removed their shells to make them more aerodynamic, but they became sluggish.",
+  "What do you call a pile of cats? A Meowtain.",
+  "How do hens stay fit? They always egg-cercise!",
+  "Can a kangaroo jump higher than the Empire State Building? Of course. The Empire State Building can't jump.",
+  "What do you give a sick lemon? Lemonaid.",
+  "What do you call an old snowman? Water.",
+  "I just got fired from a florist, apparently I took too many leaves.",
+  "Why don't skeletons ever go trick or treating? Because they have nobody to go with.",
+  "What does a female snake use for support? A co-Bra!",
+  "\"Dad, I'm cold.\" \"Go stand in the corner, I hear it's 90 degrees.\"",
+  "Child: Dad, make me a sandwich. Dad: Poof! You're a sandwich.",
+  "Why are graveyards so noisy? Because of all the coffin.",
+  "What kind of bagel can fly? A plain bagel.",
+  "How many apples grow on a tree? All of them!",
+  "What do you call a careful wolf? Aware wolf.",
+  "I was just looking at my ceiling. Not sure if it's the best ceiling in the world, but it's definitely up there.",
+  "Why do valley girls hang out in odd numbered groups? Because they can't even.",
+  "“My Dog has no nose.” “How does he smell?” “Awful”",
+  "What do you call a cow with no legs? Ground beef.",
+  "Why did the half blind man fall in the well? Because he couldn't see that well!",
+  "As I suspected, someone has been adding soil to my garden. The plot thickens.",
+  "What do bees do after they are married? They go on a honeymoon.",
+  "It's hard to explain puns to kleptomaniacs, because they take everything literally.",
+  "It's difficult to say what my wife does, she sells sea shells by the sea shore.",
+  "Why did Dracula lie in the wrong coffin? He made a grave mistake.",
+  "What did one plate say to the other plate? Dinner is on me!",
+  "what do you call a dog that can do magic tricks? a labracadabrador",
+  "Doctor: Do you want to hear the good news or the bad news? Patient: Good news please. Doctor: we're naming a disease after you.",
+  "Atheism is a non-prophet organisation.",
+  "I tried to write a chemistry joke, but could never get a reaction.",
+  "I gave my friend 10 puns hoping that one of them would make him laugh. Sadly, no pun in ten did.",
+  "What do computers and air conditioners have in common? They both become useless when you open windows.",
+  "What do you call a monkey in a mine field? A babooooom!",
+  "I cut my finger cutting cheese. I know it may be a cheesy story but I feel grate now.",
+  "How do you steal a coat? You jacket.",
+  "Why don't you find hippopotamuses hiding in trees? They're really good at it.",
+  "I'm reading a book on the history of glue – can't put it down.",
+  "Want to hear a joke about construction? Nah, I'm still working on it.",
+  "My friend told me that pepper is the best seasoning for a roast, but I took it with a grain of salt.",
+  "Just watched a documentary about beavers… It was the best damn program I've ever seen.",
+  "Why do choirs keep buckets handy? So they can carry their tune",
+  "Did you hear about the kidnapping at school? It's ok, he woke up.",
+  "You will never guess what Elsa did to the balloon. She let it go.",
+  "Did you hear about the two thieves who stole a calendar? They each got six months.",
+  "Why can't eggs have love? They will break up too soon.",
+  "You can't run through a camp site. You can only ran, because it's past tents.",
+  "They're making a movie about clocks. It's about time",
+  "I've just been reading a book about anti-gravity, it's impossible to put down!",
+  "Archaeology really is a career in ruins.",
+  "I was going to get a brain transplant, but I changed my mind",
+  "Why can't you use \"Beef stew\" as a password? Because it's not stroganoff.",
+  "What did the piece of bread say to the knife? Butter me up.",
+  "Why couldn't the lifeguard save the hippie? He was too far out, man.",
+  "Some people say that I never got over my obsession with Phil Collins. But take a look at me now.",
+  "Why did the girl smear peanut butter on the road? To go with the traffic jam.",
+  "It takes guts to be an organ donor.",
+  "The rotation of earth really makes my day.",
+  "How much does a hipster weigh? An instagram.",
+  "A woman is on trial for beating her husband to death with his guitar collection. Judge says, ‘First offender?' She says, ‘No, first a Gibson! Then a Fender!'",
+  "I saw an ad in a shop window, \"Television for sale, $1, volume stuck on full\", I thought, \"I can't turn that down\".",
+  "What kind of dog lives in a particle accelerator? A Fermilabrador Retriever.",
+  "What's blue and not very heavy? Light blue.",
+  "Guy told me today he did not know what cloning is. I told him, \"that makes 2 of us.\"",
+  "I was so proud when I finished the puzzle in six months, when on the side it said three to four years.",
+  "Where did you learn to make ice cream? Sunday school.",
+  "Coffee has a tough time at my house, every morning it gets mugged.",
+  "A quick shoutout to all of the sidewalks out there... Thanks for keeping me off the streets.",
+  "Where does Napoleon keep his armies? In his sleevies.",
+  "Leather is great for sneaking around because it's made of hide.",
+  "People are making apocalypse jokes like there's no tomorrow.",
+  "What is the tallest building in the world? The library – it's got the most stories!",
+  "What kind of magic do cows believe in? MOODOO.",
+  "What's the longest word in the dictionary? Smiles. Because there's a mile between the two S's.",
+  "I just broke my guitar. It's okay, I won't fret",
+  "It's only a murder of crows if there's probable caws.",
+  "How many kids with ADD does it take to change a lightbulb? Let's go ride bikes!",
+  "Where do hamburgers go to dance? The meat-ball.",
+  "I invented a new word! Plagiarism!",
+  "Did you know that ghosts call their true love their ghoul-friend?",
+  "What do you call a cow with two legs? Lean beef.",
+  "What did the big flower say to the littler flower? Hi, bud!",
+  "I never wanted to believe that my Dad was stealing from his job as a road worker. But when I got home, all the signs were there.",
+  "Why do pumpkins sit on people's porches? They have no hands to knock on the door.",
+  "Who is the coolest Doctor in the hospital? The hip Doctor!",
+  "Why was ten scared of seven? Because seven ate nine.",
+  "What do you get when you cross a rabbit with a water hose? Hare spray.",
+  "I applied to be a doorman but didn't get the job due to lack of experience. That surprised me, I thought it was an entry level position.",
+  "I knew a guy who collected candy canes, they were all in mint condition",
+  "Why does a chicken coop only have two doors? Because if it had four doors it would be a chicken sedan.",
+  "\"I'll call you later.\" Don't call me later, call me Dad.",
+  "Why did the teddy bear say “no” to dessert? Because she was stuffed.",
+  "Did you hear the one about the giant pickle? He was kind of a big dill.",
+  "Breaking news! Energizer Bunny arrested – charged with battery.",
+  "How many bones are in the human hand? A handful of them.",
+  "A red and a blue ship have just collided in the Caribbean. Apparently the survivors are marooned.",
+  "I've just written a song about a tortilla. Well, it is more of a rap really.",
+  "Can February march? No, but April may.",
+  "So a duck walks into a pharmacy and says “Give me some chap-stick… and put it on my bill”",
+  "Egyptians claimed to invent the guitar, but they were such lyres.",
+  "Toasters were the first form of pop-up notifications.",
+  "What is a witch's favorite subject in school? Spelling!",
+  "What do you call a crowd of chess players bragging about their wins in a hotel lobby? Chess nuts boasting in an open foyer.",
+  "Which side of the chicken has more feathers? The outside.",
+  "Remember, the best angle to approach a problem from is the \"try\" angle.",
+  "Why are fish easy to weigh? Because they have their own scales.",
+  "What did the scarf say to the hat? You go on ahead, I am going to hang around a bit longer.",
+  "Did you hear about the scientist who was lab partners with a pot of boiling water? He had a very esteemed colleague.",
+  "This morning I was wondering where the sun was, but then it dawned on me.",
+  "Writing with a broken pencil is pointless.",
+  "Why is it so windy inside an arena? All those fans.",
+  "A panda walks into a bar and says to the bartender “I'll have a Scotch and . . . . . . . . . . . . . . Coke thank you”. “Sure thing” the bartender replies and asks “but what's with the big pause?” The panda holds up his hands and says “I was born with them”",
+  "“Doctor, I've broken my arm in several places” Doctor “Well don't go to those places.”",
+  "Where was the Declaration of Independence signed? At the bottom!",
+  "What's the difference between an African elephant and an Indian elephant? About 5000 miles.",
+  "Two peanuts were walking down the street. One was a salted",
+  "Don't interrupt someone working intently on a puzzle. Chances are, you'll hear some crosswords.",
+  "Today a man knocked on my door and asked for a small donation towards the local swimming pool. I gave him a glass of water.",
+  "What did the Zen Buddist say to the hotdog vendor? Make me one with everything.",
+  "What did the digital clock say to the grandfather clock? Look, no hands!",
+  "A weasel walks into a bar. The bartender says, \"Wow, I've never served a weasel before. What can I get for you?\" \"Pop,\" goes the weasel.",
+  "How was the snow globe feeling after the storm? A little shaken.",
+  "Did you hear the one about the guy with the broken hearing aid? Neither did he.",
+  "Did you hear about the campsite that got visited by Bigfoot? It got in tents.",
+  "I saw a documentary on TV last night about how they put ships together. It was rivetting.",
+  "What did the Red light say to the Green light? Don't look at me I'm changing!",
+  "What did the ocean say to the beach? Thanks for all the sediment.",
+  "What did the left eye say to the right eye? Between us, something smells!",
+  "What do you call a fly without wings? A walk.",
+  "Why did the melons plan a big wedding? Because they cantaloupe!",
+  "Yesterday I confused the words \"jacuzzi\" and \"yakuza\". Now I'm in hot water with the Japanese mafia.",
+  "What is the least spoken language in the world? Sign Language",
+  "What do birds give out on Halloween? Tweets.",
+  "I used to think I was indecisive, but now I'm not sure.",
+  "Velcro… What a rip-off.",
+  "Have you heard the rumor going around about butter? Never mind, I shouldn't spread it.",
+  "What happens to a frog's car when it breaks down? It gets toad.",
+  "I fear for the calendar, its days are numbered.",
+  "I'm glad I know sign language, it's pretty handy.",
+  "The other day, my wife asked me to pass her lipstick but I accidentally passed her a glue stick. She still isn't talking to me.",
+  "What do you get when you cross a chicken with a skunk? A fowl smell!",
+  "How many hipsters does it take to change a lightbulb? Oh, it's a really obscure number. You've probably never heard of it.",
+  "Where do sheep go to get their hair cut? The baa-baa shop.",
+  "Our wedding was so beautiful, even the cake was in tiers.",
+  "Why did the miner get fired from his job? He took it for granite...",
+  "What did the hat say to the scarf? You can hang around. I'll just go on ahead.",
+  "Where do cats write notes? Scratch Paper!",
+  "Why is the new Kindle screen textured to look like paper? So you feel write at home.",
+  "When my wife told me to stop impersonating a flamingo, I had to put my foot down.",
+  "What's the advantage of living in Switzerland? Well, the flag is a big plus.",
+  "Why did the cookie cry? It was feeling crumby.",
+  "Me and my mates are in a band called Duvet. We're a cover band.",
+  "Where do you learn to make banana splits? At sundae school.",
+  "Nurse: Doctor, there's a patient that says he's invisible. Doctor: Well, tell him I can't see him right now!",
+  "What was a more important invention than the first telephone? The second one.",
+  "What do you get when you cross a snowman with a vampire? Frostbite.",
+  "What do you do when your bunny gets wet? You get your hare dryer.",
+  "Did you know crocodiles could grow up to 15 feet? But most just have 4.",
+  "Why did the fireman wear red, white, and blue suspenders? To hold his pants up.",
+  "In the news a courtroom artist was arrested today, I'm not surprised, he always seemed sketchy.",
+  "What do you call someone with no nose? Nobody knows.",
+  "What do you call a girl between two posts? Annette.",
+  "What do you call a fat psychic? A four-chin teller.",
+  "I used to be a banker, but I lost interest.",
+  "Why can't a bicycle stand on its own? It's two-tired.",
+  "What does a pirate pay for his corn? A buccaneer!",
+  "Astronomers got tired watching the moon go around the earth for 24 hours. They decided to call it a day.",
+  "My dog used to chase people on a bike a lot. It got so bad I had to take his bike away.",
+  "I ate a clock yesterday. It was so time consuming.",
+  "Two dyslexics walk into a bra.",
+  "I been watching a channel on TV that is strictly just about origami — of course it is paper-view.",
+  "Milk is also the fastest liquid on earth – its pasteurized before you even see it",
+  "Is the pool safe for diving? It deep ends.",
+  "Why do scuba divers fall backwards into the water? Because if they fell forwards they'd still be in the boat.",
+  "My wife told me to rub the herbs on the meat for better flavor. That's sage advice.",
+  "A man was caught stealing in a supermarket today while balanced on the shoulders of a couple of vampires. He was charged with shoplifting on two counts.",
+  "Ben & Jerry's really need to improve their operation. The only way to get there is down a rocky road.",
+  "How are false teeth like stars? They come out at night!",
+  "What time did the man go to the dentist? Tooth hurt-y.",
+  "Did you hear about the cheese factory that exploded in France? There was nothing left but de Brie.",
+  "How does a penguin build it's house? Igloos it together.",
+  "What is this movie about? It is about 2 hours long.",
+  "Why are pirates called pirates? Because they arrr!",
+  "Where does Fonzie like to go for lunch? Chick-Fil-Eyyyyyyyy.",
+  "How does a dyslexic poet write? Inverse.",
+  "Don't tell secrets in corn fields. Too many ears around.",
+  "What did the pirate say on his 80th birthday? Aye Matey!",
+  "Why did the A go to the bathroom and come out as an E? Because he had a vowel movement.",
+  "Yesterday a clown held a door open for me. I thought it was a nice jester.",
+  "Why did the opera singer go sailing? They wanted to hit the high Cs.",
+  "Never Trust Someone With Graph Paper... They're always plotting something.",
+  "What do you call an elephant that doesn't matter? An irrelephant.",
+  "What do you call a group of disorganized cats? A cat-tastrophe.",
+  "What is bread's favorite number? Leaven.",
+  "Why can't you hear a pterodactyl go to the bathroom? The p is silent.",
+  "How do you know if there's an elephant under your bed? Your head hits the ceiling!",
+  "Why does Norway have barcodes on their battleships? So when they get back to port, they can Scandinavian.",
+  "What's the worst part about being a cross-eyed teacher? They can't control their pupils.",
+  "What do you call a fashionable lawn statue with an excellent sense of rhythmn? A metro-gnome",
+  "Someone broke into my house last night and stole my limbo trophy. How low can you go?",
+  "Why did the coffee file a police report? It got mugged.",
+  "Mountains aren't just funny, they are hill areas",
+  "I was going to learn how to juggle, but I didn't have the balls.",
+  "The Swiss must've been pretty confident in their chances of victory if they included a corkscrew in their army knife.",
+  "I wear a stethoscope so that in a medical emergency I can teach people a valuable lesson about assumptions.",
+  "Why are ghosts bad liars? Because you can see right through them!",
+  "Every machine in the coin factory broke down all of a sudden without explanation. It just doesn't make any cents.",
+  "Why does it take longer to get from 1st to 2nd base, than it does to get from 2nd to 3rd base? Because there's a Shortstop in between!",
+  "What do you do when you see a space man? Park your car, man.",
+  "If you want a job in the moisturizer industry, the best advice I can give is to apply daily.",
+  "Where do you take someone who has been injured in a Peek-a-boo accident? To the I.C.U.",
+  "When you have a bladder infection, urine trouble.",
+  "How do you make Lady Gaga cry? Poker face.",
+  "What do you call a group of killer whales playing instruments? An Orca-stra.",
+  "I was in an 80's band called the prevention. We were better than the cure.",
+  "What did Michael Jackson name his denim store? Billy Jeans!",
+  "People saying 'boo! to their friends has risen by 85% in the last year.... That's a frightening statistic.",
+  "Geology rocks, but Geography is where it's at!",
+  "I was at the library and asked if they have any books on \"paranoia\", the librarian replied, \"yes, they are right behind you\"",
+  "Have you heard of the band 1023MB? They haven't got a gig yet.",
+  "What happens when you anger a brain surgeon? They will give you a piece of your mind.",
+  "I needed a password eight characters long so I picked Snow White and the Seven Dwarfs.",
+  "I used to work at a stationery store. But, I didn't feel like I was going anywhere. So, I got a job at a travel agency. Now, I know I'll be going places.",
+  "I used to work in a shoe recycling shop. It was sole destroying.",
+  "I used to hate facial hair, but then it grew on me.",
+  "R.I.P. boiled water. You will be mist.",
+  "Q: What did the spaghetti say to the other spaghetti? A: Pasta la vista, baby!",
+  "The first time I got a universal remote control I thought to myself, \"This changes everything\"",
+  "Why is the ocean always blue? Because the shore never waves back.",
+  "Why did the feline fail the lie detector test? Because he be lion.",
+  "Why did the man put his money in the freezer? He wanted cold hard cash!",
+  "I decided to sell my Hoover… well it was just collecting dust.",
+  "Why do ducks make great detectives? They always quack the case.",
+  "What does a clock do when it's hungry? It goes back four seconds!",
+  "What do I look like? A JOKE MACHINE!?",
+  "I bought shoes from a drug dealer once. I don't know what he laced them with, but I was tripping all day.",
+  "What is a tornado's favorite game to play? Twister!",
+  "You know that cemetery up the road? People are dying to get in there.",
+  "Did you hear about the Mexican train killer? He had loco motives",
+  "Can I watch the TV? Dad: Yes, but don't turn it on.",
+  "What is worse then finding a worm in your Apple? Finding half a worm in your Apple.",
+  "What do vegetarian zombies eat? Grrrrrainnnnnssss.",
+  "\"I'm sorry.\" \"Hi sorry, I'm dad\"",
+  "What is the hardest part about sky diving? The ground.",
+  "Why did the cowboy have a weiner dog? Somebody told him to get a long little doggy.",
+  "Who did the wizard marry? His ghoul-friend",
+  "How many seconds are in a year? 12. January 2nd, February 2nd, March 2nd, April 2nd.... etc",
+  "I ordered a chicken and an egg from Amazon. I'll let you know.",
+  "Ever wondered why bees hum? It's because they don't know the words.",
+  "How many optometrists does it take to change a light bulb? 1 or 2? 1... or 2?",
+  "There's not really any training for garbagemen. They just pick things up as they go.",
+  "Did you hear about the cow who jumped over the barbed wire fence? It was udder destruction.",
+  "What do you call a bear with no teeth? A gummy bear!",
+  "I've deleted the phone numbers of all the Germans I know from my mobile phone. Now it's Hans free.",
+  "What do you call your friend who stands in a hole? Phil.",
+  "A doll was recently found dead in a rice paddy. It's the only known instance of a nick nack paddy wack.",
+  "How do you tell the difference between a crocodile and an alligator? You will see one later and one in a while.",
+  "What do you call a fake noodle? An impasta.",
+  "The word queue is ironic. It's just q with a bunch of silent letters waiting in line.",
+  "What do you call a droid that takes the long way around? R2 detour.",
+  "What's the best thing about elevator jokes? They work on so many levels.",
+  "Where do rabbits go after they get married? On a bunny-moon.",
+  "Why do cows wear bells? Because their horns don't work.",
+  "Two fish are in a tank, one turns to the other and says, \"how do you drive this thing?\"",
+  "I finally bought the limited edition Thesaurus that I've always wanted. When I opened it, all the pages were blank. I have no words to describe how angry I am.",
+  "This is my step ladder. I never knew my real ladder.",
+  "I was thinking about moving to Moscow but there is no point Russian into things.",
+  "A man walks into a bar and orders helicopter flavor chips. The barman replies “sorry mate we only do plain”",
+  "I got an A on my origami assignment when I turned my paper into my teacher",
+  "What did the fish say when it swam into a wall? Damn!",
+  "Why does Waldo only wear stripes? Because he doesn't want to be spotted.",
+  "My New Years resolution is to stop leaving things so late.",
+  "Why did the scarecrow win an award? Because he was outstanding in his field.",
+  "Americans can't switch from pounds to kilograms overnight. That would cause mass confusion.",
+  "An apple a day keeps the bullies away. If you throw it hard enough.",
+  "Why does Superman get invited to dinners? Because he is a Supperhero.",
+  "Why is no one friends with Dracula? Because he's a pain in the neck.",
+  "A man got hit in the head with a can of Coke, but he was alright because it was a soft drink.",
+  "What is the leading cause of dry skin? Towels",
+  "A man walked in to a bar with some asphalt on his arm. He said “Two beers please, one for me and one for the road.”",
+  "Did you know the first French fries weren't actually cooked in France? They were cooked in Greece.",
+  "I'll tell you something about German sausages, they're the wurst",
+  "Where did Captain Hook get his hook? From a second hand store.",
+  "I got fired from a florist, apparently I took too many leaves.",
+  "Two silk worms had a race. They ended up in a tie.",
+  "I got fired from the transmission factor, turns out I didn't put on enough shifts...",
+  "Where do young cows eat lunch? In the calf-ateria.",
+  "I went to the doctor today and he told me I had type A blood but it was a type O.",
+  "How does a French skeleton say hello? Bone-jour.",
+  "Why was the big cat disqualified from the race? Because it was a cheetah.",
+  "What do prisoners use to call each other? Cell phones.",
+  "What's E.T. short for? He's only got little legs.",
+  "What kind of award did the dentist receive? A little plaque.",
+  "Do you know where you can get chicken broth in bulk? The stock market.",
+  "What's orange and sounds like a parrot? A Carrot.",
+  "A Sandwich walks into a bar, the bartender says “Sorry, we don't serve food here”",
+  "What do you get hanging from Apple trees? Sore arms.",
+  "I thought about going on an all-almond diet. But that's just nuts.",
+  "I don't play soccer because I enjoy the sport. I'm just doing it for kicks.",
+  "Today a girl said she recognized me from vegetarian club, but I'm sure I've never met herbivore.",
+  "How do you organize a space party? You planet.",
+  "How do you make holy water? You boil the hell out of it.",
+  "A man is washing the car with his son. The son asks...... \"Dad, can't you just use a sponge?\"",
+  "They laughed when I said I wanted to be a comedian – they're not laughing now.",
+  "What does an angry pepper do? It gets jalapeño face.",
+  "Don't buy flowers at a monastery. Because only you can prevent florist friars.",
+  "Hostess: Do you have a preference of where you sit? Dad: Down.",
+  "Did you hear about the submarine industry? It really took a dive...",
+  "The biggest knight at King Arthur's round table was Sir Cumference. He acquired his size from eating too much pi.",
+  "To the person who stole my anti-depressant pills: I hope you're happy now.",
+  "How do you get a baby alien to sleep? You rocket.",
+  "Why do pirates not know the alphabet? They always get stuck at \"C\".",
+  "Did you hear about the chameleon who couldn't change color? They had a reptile dysfunction.",
+  "Why did the house go to the doctor? It was having window panes.",
+  "I made a playlist for hiking. It has music from Peanuts, The Cranberries, and Eminem. I call it my Trail Mix.",
+  "What do you call a dictionary on drugs? High definition.",
+  "A Skeleton walked into a bar he said I need a beer and a mop",
+  "How do robots eat guacamole? With computer chips.",
+  "Today, my son asked \"Can I have a book mark?\" and I burst into tears. 11 years old and he still doesn't know my name is Brian.",
+  "When does a joke become a dad joke? When it becomes apparent.",
+  "What's brown and sounds like a bell? Dung!",
+  "Why do crabs never give to charity? Because they're shellfish.",
+  "What do you call a pig with three eyes? Piiig",
+  "How do you make a hankie dance? Put a little boogie in it.",
+  "Sgt.: Commissar! Commissar! The troops are revolting! Commissar: Well, you're pretty repulsive yourself.",
+  "The other day I was listening to a song about superglue, it's been stuck in my head ever since.",
+  "If you're struggling to think of what to get someone for Christmas. Get them a fridge and watch their face light up when they open it.",
+  "The great thing about stationery shops is they're always in the same place...",
+  "Did you hear about the cheese who saved the world? It was Legend-dairy!",
+  "What do you call cheese by itself? Provolone.",
+  "How do you fix a broken pizza? With tomato paste.",
+  "What's red and bad for your teeth? A Brick.",
+  "I heard there was a new store called Moderation. They have everything there",
+  "A beekeeper was indicted after he confessed to years of stealing at work. They charged him with emBEEzlement",
+  "I used to work for a soft drink can crusher. It was soda pressing.",
+  "Why did the chicken get a penalty? For fowl play.",
+  "When Dad drops a pea off of his plate ‘oh dear I've pee'd on the table!",
+  "My cat was just sick on the carpet, I don't think it's feline well.",
+  "Why did the burglar hang his mugshot on the wall? To prove that he was framed!",
+  "I dreamed about drowning in an ocean made out of orange soda last night. It took me a while to work out it was just a Fanta sea.",
+  "I had a dream that I was a muffler last night. I woke up exhausted!",
+  "Doctor you've got you help me, I'm addicted to twitter. Doctor: I don't follow you.",
+  "My boss told me to have a good day. So I went home...",
+  "I broke my finger at work today, on the other hand I'm completely fine.",
+  "I went to a book store and asked the saleswoman where the Self Help section was, she said if she told me it would defeat the purpose.",
+  "How does a scientist freshen their breath? With experi-mints!",
+  "What has ears but cannot hear? A field of corn.",
+  "People who don't eat gluten are really going against the grain.",
+  "Sore throats are a pain in the neck!",
+  "How did Darth Vader know what Luke was getting for Christmas? He felt his presents.",
+  "What's the difference between a seal and a sea lion? An ion!",
+  "I think circles are pointless.",
+  "What did the Dorito farmer say to the other Dorito farmer? Cool Ranch!",
+  "A ghost walks into a bar and asks for a glass of vodka but the bar tender says, “sorry we don't serve spirits”",
+  "You know what they say about cliffhangers...",
+  "Why do wizards clean their teeth three times a day? To prevent bat breath!",
+  "Feeling pretty proud of myself. The Sesame Street puzzle I bought said 3-5 years, but I finished it in 18 months.",
+  "A termite walks into a bar and asks “Is the bar tender here?”",
+  "Why are fish so smart? Because they live in schools!",
+  "How does the moon cut his hair? Eclipse it.",
+  "Why did the worker get fired from the orange juice factory? Lack of concentration.",
+  "I couldn't get a reservation at the library. They were completely booked.",
+  "Dad, can you put my shoes on? I don't think they'll fit me.",
+  "How do you get two whales in a car? Start in England and drive West.",
+  "What do you call an Argentinian with a rubber toe? Roberto",
+  "I tried taking some high resolution photos of local farmland, but they all turned out a bit grainy.",
+  "What did the ocean say to the shore? Nothing, it just waved.",
+  "I went to the zoo the other day, there was only one dog in it. It was a shitzu.",
+  "I gave all my dead batteries away today, free of charge.",
+  "Did you hear the news? FedEx and UPS are merging. They're going to go by the name Fed-Up from now on.",
+  "Why didn't the number 4 get into the nightclub? Because he is 2 square.",
+  "What do you call a sheep with no legs? A cloud.",
+  "Why did the m&m go to school? Because it wanted to be a Smartie!",
+  "Did you hear that David lost his ID in prague? Now we just have to call him Dav.",
+  "My wife is on a tropical fruit diet, the house is full of stuff. It is enough to make a mango crazy.",
+  "Why are basketball players messy eaters? Because they are always dribbling.",
+  "Why do mathematicians hate the U.S.? Because it's indivisible.",
+  "I knew i shouldn't have ate that seafood. Because now i'm feeling a little… Eel",
+  "Past, present, and future walked into a bar.... It was tense.",
+  "Did you hear about the bread factory burning down? They say the business is toast.",
+  "My boss told me that he was going to fire the person with the worst posture. I have a hunch, it might be me.",
+  "What's black and white and read all over? The newspaper.",
+  "Why are skeletons so calm? Because nothing gets under their skin.",
+  "Without geometry life is pointless.",
+  "“Hold on, I have something in my shoe” “I'm pretty sure it's a foot”",
+  "Have you heard about the film \"Constipation\", you probably haven't because it's not out yet.",
+  "I hate perforated lines, they're tearable.",
+  "I asked the surgeon if I could administer my own anesthetic, they said: go ahead, knock yourself out.",
+  "Why did the barber win the race? He took a short cut.",
+  "Why did the octopus beat the shark in a fight? Because it was well armed.",
+  "What did the judge say to the dentist? Do you swear to pull the tooth, the whole tooth and nothing but the tooth?",
+  "\"What time is it?\" I don't know... it keeps changing.",
+  "You can't trust a ladder. It will always let you down",
+  "I am so good at sleeping I can do it with my eyes closed!",
+  "I wouldn't buy anything with velcro. It's a total rip-off.",
+  "What are the strongest days of the week? Saturday and Sunday...the rest are weekdays.",
+  "My friend said to me: \"What rhymes with orange\" I said: \"no it doesn't\"",
+  "I had a rough day, and then somebody went and ripped the front and back pages from my dictionary. It just goes from bad to worse.",
+  "I adopted my dog from a blacksmith. As soon as we got home he made a bolt for the door.",
+  "Where does batman go to the bathroom? The batroom.",
+  "Some people say that comedians who tell one too many light bulb jokes soon burn out, but they don't know watt they are talking about. They're not that bright.",
+  "A bartender broke up with her boyfriend, but he kept asking her for another shot.",
+  "What do you call a cow on a trampoline? A milk shake!",
+  "What do you call a nervous javelin thrower? Shakespeare.",
+  "What do you call an eagle who can play the piano? Talonted!",
+  "What do you call a boomerang that won't come back? A stick.",
+  "What do you call a duck that gets all A's? A wise quacker.",
+  "I used to work for an origami company but they folded.",
+  "There's a new type of broom out, it's sweeping the nation.",
+  "I just wrote a book on reverse psychology. Do not read it!",
+  "The shovel was a ground-breaking invention.",
+  "Why don't seagulls fly over the bay? Because then they'd be bay-gulls!",
+  "Parallel lines have so much in common. It's a shame they'll never meet.",
+  "The best time on a clock is 6:30--hands down.",
+  "What do you call a magician who has lost their magic? Ian.",
+  "Why do fish live in salt water? Because pepper makes them sneeze!",
+  "When do doctors get angry? When they run out of patients.",
+  "A man tried to sell me a coffin today. I told him that's the last thing I need.",
+  "It doesn't matter how much you push the envelope. It will still be stationary.",
+  "What did the shy pebble wish for? That she was a little boulder.",
+  "Why did the belt go to prison? He held up a pair of pants!",
+  "Wife told me to take the spider out instead of killing it... We had some drinks, cool guy, wants to be a web developer.",
+  "What cheese can never be yours? Nacho cheese.",
+  "What is a vampire's favorite fruit? A blood orange.",
+  "A cannibal is someone who is fed up with people.",
+  "Why did the cookie cry? Because his mother was a wafer so long",
+  "Want to hear my pizza joke? Never mind, it's too cheesy.",
+  "What did the grape do when he got stepped on? He let out a little wine.",
+  "What did the 0 say to the 8? Nice belt.",
+  "Why was the picture sent to prison? It was framed.",
+  "Two peanuts were walking down the street. One was a salted.",
+  "I burned 2000 calories today, I left my food in the oven for too long.",
+  "Cosmetic surgery used to be such a taboo subject. Now you can talk about Botox and nobody raises an eyebrow.",
+  "How can you tell a vampire has a cold? They start coffin.",
+  "At the boxing match, the dad got into the popcorn line and the line for hot dogs, but he wanted to stay out of the punchline.",
+  "\"Hey, dad, did you get a haircut?\" \"No, I got them all cut.\"",
+  "Why is there always a gate around cemeteries? Because people are always dying to get in.",
+  "I asked a frenchman if he played video games. He said \"Wii\"",
+  "My dentist is the best, he even has a little plaque!",
+  "So, I heard this pun about cows, but it's kinda offensive so I won't say it. I don't want there to be any beef between us.",
+  "What do Alexander the Great and Winnie the Pooh have in common? Same middle name.",
+  "What kind of music do planets listen to? Nep-tunes.",
+  "Shout out to my grandma, that's the only way she can hear.",
+  "Why was the broom late for the meeting? He overswept.",
+  "I went on a date last night with a girl from the zoo. It was great. She's a keeper.",
+  "Why do you never see elephants hiding in trees? Because they're so good at it.",
+  "Mahatma Gandhi, as you know, walked barefoot most of the time, which produced an impressive set of calluses on his feet. He also ate very little, which made him rather frail and with his odd diet, he suffered from bad breath. This made him a super calloused fragile mystic hexed by halitosis.",
+  "What do you call an alligator in a vest? An in-vest-igator!",
+  "What did celery say when he broke up with his girlfriend? She wasn't right for me, so I really don't carrot all.",
+  "Thanks for explaining the word \"many\" to me. It means a lot.",
+  "What's brown and sticky? A stick.",
+  "What biscuit does a short person like? Shortbread.",
+  "The invention of the wheel was what got things rolling",
+  "Why was Santa's little helper feeling depressed? Because he has low elf esteem.",
+  "Why did Sweden start painting barcodes on the sides of their battleships? So they could Scandinavian.",
+  "Want to hear a chimney joke? Got stacks of em! First one's on the house",
+  "What do you call a pig that knows karate? A pork chop!",
+  "If two vegans are having an argument, is it still considered beef?",
+  "My sea sickness comes in waves.",
+  "For Valentine's day, I decided to get my wife some beads for an abacus. It's the little things that count.",
+  "What's the worst thing about ancient history class? The teachers tend to Babylon.",
+  "My new thesaurus is terrible. In fact, it's so bad, I'd say it's terrible.",
+  "What type of music do balloons hate? Pop music!",
+  "Do you want a brief explanation of what an acorn is? In a nutshell, it's an oak tree.",
+  "How come a man driving a train got struck by lightning? He was a good conductor.",
+  "Camping is intense.",
+  "Dad died because he couldn't remember his blood type. I will never forget his last words. Be positive.",
+  "I'm on a whiskey diet. I've lost three days already.",
+  "How does Darth Vader like his toast? On the dark side.",
+  "Why didn't the orange win the race? It ran out of juice.",
+  "Did you hear about the runner who was criticized? He just took it in stride",
+  "What animal is always at a game of cricket? A bat.",
+  "Why did the Clydesdale give the pony a glass of water? Because he was a little horse!",
+  "I started a new business making yachts in my attic this year...the sails are going through the roof",
+  "If you think swimming with dolphins is expensive, you should try swimming with sharks--it cost me an arm and a leg!",
+  "What did the Buffalo say to his little boy when he dropped him off at school? Bison.",
+  "I used to have a job at a calendar factory but I got the sack because I took a couple of days off.",
+  "I am terrified of elevators. I'm going to start taking steps to avoid them.",
+  "Why do bees have sticky hair? Because they use honey combs!",
+  "Did you know you should always take an extra pair of pants golfing? Just in case you get a hole in one.",
+  "I wish I could clean mirrors for a living. It's just something I can see myself doing.",
+  "How do the trees get on the internet? They log on.",
+  "To the guy who invented zero... thanks for nothing.",
+  "What lies at the bottom of the ocean and twitches? A nervous wreck.",
+  "What is red and smells like blue paint? Red paint!",
+  "*Reversing the car* \"Ah, this takes me back\"",
+  "Doctor you've got to help me, I'm addicted to Twitter. Doctor: I don't follow you.",
+  "How do locomotives know where they're going? Lots of training",
+  "How did the hipster burn the roof of his mouth? He ate the pizza before it was cool.",
+  "A butcher accidentally backed into his meat grinder and got a little behind in his work that day.",
+  "Did you hear about the new restaurant on the moon? The food is great, but there's just no atmosphere.",
+  "What do you call a beehive without the b's? An eehive.",
+  "What kind of pants do ghosts wear? Boo jeans.",
+  "Two guys walked into a bar, the third one ducked.",
+  "I really want to buy one of those supermarket checkout dividers, but the cashier keeps putting it back.",
+  "A horse walks into a bar. The bar tender says \"Hey.\" The horse says \"Sure.\"",
+  "Did you hear about the guy who invented Lifesavers? They say he made a mint.",
+  "What's the difference between a poorly dressed man on a tricycle and a well dressed man on a bicycle? Attire.",
+  "Why are giraffes so slow to apologize? Because it takes them a long time to swallow their pride.",
+  "\"Dad, I'm hungry.\" Hello, Hungry. I'm Dad.",
+  "I'm practicing for a bug-eating contest and I've got butterflies in my stomach.",
+  "I have the heart of a lion... and a lifetime ban from the San Diego Zoo.",
+  "What do you call a guy lying on your doorstep? Matt.",
+  "I met this girl on a dating site and, I don't know, we just clicked.",
+  "What did the calculator say to the student? You can count on me.",
+  "What do you call a gorilla wearing headphones? Anything you'd like, it can't hear you.",
+  "Have you heard about corduroy pillows? They're making headlines!"
+];
+
+const jokeText = document.getElementById("jokeText");
+const jokeCard = document.getElementById("jokeCard");
+const jokeCounter = document.getElementById("jokeCounter");
+let lastJoke = -1;
+let jokeCount = 0;
+
+function tellJoke() {
+  let i;
+  do { i = Math.floor(Math.random() * jokes.length); } while (i === lastJoke && jokes.length > 1);
+  lastJoke = i;
+  jokeText.textContent = jokes[i];
+  jokeCount++;
+  jokeCounter.textContent = `Jokes told: ${jokeCount} / ${jokes.length} in the vault`;
+  jokeCard.classList.remove("pop");
+  void jokeCard.offsetWidth;
+  jokeCard.classList.add("pop");
+}
+document.getElementById("jokeBtn").addEventListener("click", tellJoke);
+
+/* ---------- Would You Rather ---------- */
+const wyr = [
+  {"c":"Casual & Icebreakers","a":"Always be 15 minutes early","b":"Always be 20 minutes late"},
+  {"c":"Casual & Icebreakers","a":"Have unlimited free domestic flights","b":"Have free meals at any restaurant for life"},
+  {"c":"Casual & Icebreakers","a":"Lose the ability to read","b":"Lose the ability to speak"},
+  {"c":"Casual & Icebreakers","a":"Never get stuck in traffic again","b":"Never get another cold"},
+  {"c":"Casual & Icebreakers","a":"Explore the deep ocean","b":"Explore outer space"},
+  {"c":"Casual & Icebreakers","a":"Have a pause button for your life","b":"Have a rewind button for your life"},
+  {"c":"Casual & Icebreakers","a":"Speak all human languages fluently","b":"Be able to speak to animals"},
+  {"c":"Casual & Icebreakers","a":"Win $50,000 right now","b":"Flip a coin for $1,000,000"},
+  {"c":"Casual & Icebreakers","a":"Live in a bustling city penthouse","b":"Live in a secluded cabin in the mountains"},
+  {"c":"Casual & Icebreakers","a":"Always have wet socks","b":"Always have a constant pebble in your shoe"},
+  {"c":"Weird & Absurd","a":"Fight one horse-sized duck","b":"Fight 100 duck-sized horses"},
+  {"c":"Weird & Absurd","a":"Have hands for feet","b":"Have feet for hands"},
+  {"c":"Weird & Absurd","a":"Have every movie you ever watch spoiled beforehand","b":"Never be able to skip any ad"},
+  {"c":"Weird & Absurd","a":"Have spaghetti for hair","b":"Sweat warm maple syrup"},
+  {"c":"Weird & Absurd","a":"Be forced to narrate your life out loud in third person","b":"Sing everything you say"},
+  {"c":"Weird & Absurd","a":"Have a pet dinosaur the size of a cat","b":"Have a pet cat the size of a dinosaur"},
+  {"c":"Weird & Absurd","a":"Have to burp bubbles every time you sneeze","b":"Honk like a goose every time you sneeze"},
+  {"c":"Weird & Absurd","a":"Never be able to use utensils again","b":"Only use a ladle for all meals"},
+  {"c":"Weird & Absurd","a":"Glow brightly in the dark when you get nervous","b":"Make dial-up internet sounds when thinking"},
+  {"c":"Weird & Absurd","a":"Have taste buds on your fingertips","b":"See the world only in sepia tone"},
+  {"c":"Moral Dilemmas","a":"Know the exact date of your death","b":"Know the cause of your death"},
+  {"c":"Moral Dilemmas","a":"Live a comfortable, ordinary life","b":"Live an extraordinary, chaotic life with major historical impact"},
+  {"c":"Moral Dilemmas","a":"Be universally respected by everyone except your closest friend","b":"Be hated by everyone except your closest friend"},
+  {"c":"Moral Dilemmas","a":"Have all your browser and message history broadcast publicly","b":"Never be able to use the internet again"},
+  {"c":"Moral Dilemmas","a":"Sacrifice your own memories to save someone else's life","b":"Keep your memories while they forget you exist"},
+  {"c":"Moral Dilemmas","a":"Be the smartest person in a world of fools","b":"Be an average person in a world of super-geniuses"},
+  {"c":"Moral Dilemmas","a":"Always have to say whatever thought enters your mind immediately","b":"Never speak again"},
+  {"c":"Moral Dilemmas","a":"Live forever in your current physical condition","b":"Die painlessly at 75"},
+  {"c":"Moral Dilemmas","a":"Wipe out all crime globally at the cost of zero personal privacy","b":"Keep things as they are"},
+  {"c":"Moral Dilemmas","a":"Relive the worst day of your life once a year","b":"Erase the best day of your life completely"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only be able to shower in ice-cold water","b":"Sleep on a hardwood floor with no mattress"},
+  {"c":"Everyday Quirks & Daily Life","a":"Never be able to drink coffee/caffeine again","b":"Never eat pizza again"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have your phone battery capped at 10% forever","b":"Have dial-up download speeds"},
+  {"c":"Everyday Quirks & Daily Life","a":"Give up all streaming services","b":"Give up music for five years"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have a permanently itchy nose","b":"Have a permanent mosquito bite on your ankle"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always have to reply to emails within 60 seconds","b":"Never receive text messages"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only wear formal wear everywhere you go","b":"Only wear pajamas everywhere you go"},
+  {"c":"Everyday Quirks & Daily Life","a":"Live without heating in the winter","b":"Live without air conditioning in the summer"},
+  {"c":"Moral Dilemmas","a":"Frame your best friend for a crime you committed","b":"Take the fall for their crime"},
+  {"c":"Moral Dilemmas","a":"Have unlimited wealth but only spend it on others","b":"Have just enough to live comfortably yourself"},
+  {"c":"Moral Dilemmas","a":"Undo one mistake from your past","b":"See five minutes into your future"},
+  {"c":"Moral Dilemmas","a":"Live without the ability to feel physical pain","b":"Live without the ability to feel emotional pain"},
+  {"c":"Moral Dilemmas","a":"Be remembered for something terrible you didn't do","b":"Be forgotten completely"},
+  {"c":"Moral Dilemmas","a":"Save five random strangers","b":"Save one loved one"},
+  {"c":"Moral Dilemmas","a":"Have absolute power in a small country","b":"Have zero influence in a utopian world"},
+  {"c":"Moral Dilemmas","a":"Lose all your past memories","b":"Never be able to make new memories"},
+  {"c":"Moral Dilemmas","a":"Know every truth in the universe","b":"Remain blissfully ignorant of ugly realities"},
+  {"c":"Moral Dilemmas","a":"Be feared by all","b":"Be loved by none"},
+  {"c":"Moral Dilemmas","a":"Spend 10 years in prison for a crime you didn't commit","b":"Let a criminal walk free in your place"},
+  {"c":"Moral Dilemmas","a":"Never be able to tell a lie","b":"Never know when someone is lying to you"},
+  {"c":"Moral Dilemmas","a":"Have the power to heal anyone except yourself","b":"Never get sick yourself"},
+  {"c":"Moral Dilemmas","a":"Give up your sense of sight","b":"Give up your sense of hearing"},
+  {"c":"Moral Dilemmas","a":"Live in a virtual reality paradise","b":"Live in a difficult real world"},
+  {"c":"Moral Dilemmas","a":"Know when people are talking about you behind your back","b":"Never know what people think about you"},
+  {"c":"Moral Dilemmas","a":"Be reincarnated with all your memories","b":"Have one continuous, ordinary life"},
+  {"c":"Superpowers & Sci-Fi","a":"Control time","b":"Control space/gravity"},
+  {"c":"Moral Dilemmas","a":"Make everyone around you happy while feeling miserable","b":"Be euphoric while everyone around you is unhappy"},
+  {"c":"Moral Dilemmas","a":"Solve world hunger","b":"End all global conflict"},
+  {"c":"Moral Dilemmas","a":"Live in a world where everyone knows what you're thinking","b":"Live in a world where no one can speak"},
+  {"c":"Moral Dilemmas","a":"Die a hero in 5 years","b":"Live an ordinary life for 80 more years"},
+  {"c":"Moral Dilemmas","a":"Always know when someone is about to betray you","b":"Never be betrayed at all"},
+  {"c":"Moral Dilemmas","a":"Give up all digital technology","b":"Give up all modern medicine"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to speak to the dead","b":"Foresee catastrophes before they happen"},
+  {"c":"Superpowers & Sci-Fi","a":"Live in a dystopian future with advanced tech","b":"Live in a peaceful medieval era"},
+  {"c":"Moral Dilemmas","a":"Lose your ability to dream","b":"Never feel fully rested"},
+  {"c":"Superpowers & Sci-Fi","a":"Stop time for 1 hour a day","b":"Double the length of your lifespan"},
+  {"c":"Moral Dilemmas","a":"Experience extreme physical pain for 1 hour","b":"Experience continuous dull discomfort for 5 years"},
+  {"c":"Moral Dilemmas","a":"Erase your biggest regret","b":"Double your happiest memory"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to read minds but never turn it off","b":"Be completely unable to read facial expressions"},
+  {"c":"Superpowers & Sci-Fi","a":"Have telekinesis","b":"Have telepathy"},
+  {"c":"Superpowers & Sci-Fi","a":"Teleport anywhere instantly","b":"Fly at 60 mph"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to turn invisible","b":"Breathe underwater"},
+  {"c":"Superpowers & Sci-Fi","a":"Travel 200 years into the past","b":"Travel 200 years into the future"},
+  {"c":"Superpowers & Sci-Fi","a":"Have super speed","b":"Have invulnerability"},
+  {"c":"Superpowers & Sci-Fi","a":"Have a photographic memory","b":"Have the ability to forget anything on command"},
+  {"c":"Superpowers & Sci-Fi","a":"Never need to sleep","b":"Never need to eat"},
+  {"c":"Superpowers & Sci-Fi","a":"Control fire","b":"Control water"},
+  {"c":"Superpowers & Sci-Fi","a":"Have night vision","b":"Have x-ray vision"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to talk to machines","b":"Understand plant biology telepathically"},
+  {"c":"Superpowers & Sci-Fi","a":"Survive in outer space without a suit","b":"Dive to the bottom of the Mariana Trench"},
+  {"c":"Superpowers & Sci-Fi","a":"Have a personal forcefield","b":"Be able to walk through walls"},
+  {"c":"Superpowers & Sci-Fi","a":"Have super strength","b":"Have super agility"},
+  {"c":"Superpowers & Sci-Fi","a":"Control the weather","b":"Predict natural disasters"},
+  {"c":"Superpowers & Sci-Fi","a":"Duplicate yourself once","b":"Clone any inanimate object"},
+  {"c":"Superpowers & Sci-Fi","a":"Have wings","b":"Have gills"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to change your physical appearance at will","b":"Alter your voice to mimic anyone"},
+  {"c":"Superpowers & Sci-Fi","a":"Possess unlimited stamina","b":"Require zero recovery time from injuries"},
+  {"c":"Superpowers & Sci-Fi","a":"Manipulate shadows","b":"Bend light"},
+  {"c":"Superpowers & Sci-Fi","a":"Have the power to generate electricity","b":"Manipulate magnetic fields"},
+  {"c":"Superpowers & Sci-Fi","a":"Have a 10-second rewind button for life","b":"Have a pause button that lasts up to an hour"},
+  {"c":"Superpowers & Sci-Fi","a":"Live on an advanced space station","b":"Live inside an underwater colony"},
+  {"c":"Superpowers & Sci-Fi","a":"Have an AI assistant embedded in your mind","b":"Have a robot companion"},
+  {"c":"Superpowers & Sci-Fi","a":"Be immune to all toxins and poisons","b":"Never age past 25"},
+  {"c":"Superpowers & Sci-Fi","a":"Control gravity within a 10-meter radius","b":"Create micro-wormholes"},
+  {"c":"Superpowers & Sci-Fi","a":"Detect any lie instantly","b":"Persuade anyone of any true fact"},
+  {"c":"Superpowers & Sci-Fi","a":"Breathe in any atmosphere","b":"Survive extreme temperatures (-100°F to 200°F)"},
+  {"c":"Superpowers & Sci-Fi","a":"Have elastic limbs","b":"Have stone-hard skin"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to jump 50 feet in the air","b":"Run up vertical surfaces"},
+  {"c":"Superpowers & Sci-Fi","a":"Possess 360-degree vision","b":"Possess supersonic hearing"},
+  {"c":"Superpowers & Sci-Fi","a":"Never get fatigued physically","b":"Never suffer mental burn-out"},
+  {"c":"Superpowers & Sci-Fi","a":"Possess the reflexes of a housefly","b":"Possess the sensory range of a shark"},
+  {"c":"Superpowers & Sci-Fi","a":"Communicate through radio waves","b":"See electromagnetic frequencies"},
+  {"c":"Superpowers & Sci-Fi","a":"Have a Heads-Up Display (HUD) over your eyesight","b":"Have a built-in search engine in your thoughts"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to phase through objects","b":"Make objects weightless"},
+  {"c":"Superpowers & Sci-Fi","a":"Summon any tool you need out of thin air","b":"Instantly repair any broken machine"},
+  {"c":"Superpowers & Sci-Fi","a":"Command an army of mechanical drones","b":"Control a pack of wolves"},
+  {"c":"Superpowers & Sci-Fi","a":"Travel between parallel dimensions","b":"Explore distant galaxies"},
+  {"c":"Superpowers & Sci-Fi","a":"Be able to grant wishes to others (never yourself)","b":"Have three wishes for yourself"},
+  {"c":"Weird & Absurd","a":"Cry carbonated soda","b":"Sweat warm maple syrup"},
+  {"c":"Weird & Absurd","a":"Have spaghetti for hair","b":"Have celery stalks for fingers"},
+  {"c":"Weird & Absurd","a":"Have taste buds on the soles of your feet","b":"Have taste buds on your fingertips"},
+  {"c":"Weird & Absurd","a":"Honk like a goose when you sneeze","b":"Bark like a dog when you cough"},
+  {"c":"Weird & Absurd","a":"Glow neon green whenever you lie","b":"Make dial-up internet noises when thinking"},
+  {"c":"Weird & Absurd","a":"Only eat food using a ladle","b":"Only eat food with a toothpick"},
+  {"c":"Weird & Absurd","a":"Have a permanent clown nose","b":"Wear clown shoes everywhere"},
+  {"c":"Weird & Absurd","a":"Have legs as long as a giraffe","b":"Have a neck as long as a flamingo"},
+  {"c":"Weird & Absurd","a":"Sneeze glitter","b":"Burp soap bubbles"},
+  {"c":"Weird & Absurd","a":"Have your theme song play every time you walk into a room","b":"Have applause after every sentence you say"},
+  {"c":"Everyday Quirks & Daily Life","a":"Wear wet denim jeans forever","b":"Wear a permanently itchy sweater"},
+  {"c":"Weird & Absurd","a":"Speak like a 1920s radio host","b":"Talk like a movie trailer narrator"},
+  {"c":"Weird & Absurd","a":"Have ears the size of dinner plates","b":"Have a nose that whistles when you breathe"},
+  {"c":"Weird & Absurd","a":"Walk backward everywhere you go","b":"Hop on one foot everywhere you go"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always smell like fried onions","b":"Always smell like wet dog"},
+  {"c":"Weird & Absurd","a":"Have teeth made of hard candy","b":"Have fingernails made of glass"},
+  {"c":"Weird & Absurd","a":"Be followed everywhere by a marching band","b":"Be followed everywhere by a mime"},
+  {"c":"Weird & Absurd","a":"Have eyes that change color based on what you ate","b":"Have hair that grows 1 inch per hour"},
+  {"c":"Weird & Absurd","a":"Sweat vinegar","b":"Cry hot sauce"},
+  {"c":"Weird & Absurd","a":"Have arms that don't bend at the elbows","b":"Have legs that don't bend at the knees"},
+  {"c":"Weird & Absurd","a":"Only be able to communicate through interpretive dance","b":"Only be able to communicate through charades"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have your clothes always feel 2 sizes too small","b":"Have your clothes always feel 5 sizes too big"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have a permanent pebble in your shoe","b":"Have a single drop of water trapped in your ear"},
+  {"c":"Everyday Quirks & Daily Life","a":"Wear a tuxedo/evening gown 24/7","b":"Wear a giant mascot costume 24/7"},
+  {"c":"Weird & Absurd","a":"Have a tiny pocket-sized pet elephant","b":"Have a pet cat the size of a horse"},
+  {"c":"Weird & Absurd","a":"Have fingers that stick to everything like Velcro","b":"Have feet that slide on all surfaces like ice"},
+  {"c":"Weird & Absurd","a":"Only speak in rhymes","b":"Only speak in questions"},
+  {"c":"Weird & Absurd","a":"Have your skin change color to match whatever wall you stand against","b":"Leave a trail of glitter wherever you walk"},
+  {"c":"Weird & Absurd","a":"Eat a whole raw onion like an apple","b":"Drink a cup of olive oil"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always have sticky fingers","b":"Always have sand in your bed"},
+  {"c":"Weird & Absurd","a":"Have eyebrows made of feathers","b":"Have an unremovable pirate mustache"},
+  {"c":"Social & Work","a":"Shout everything you think during meetings","b":"Whisper everything you say in casual conversation"},
+  {"c":"Everyday Quirks & Daily Life","a":"Be forced to use sandpaper as toilet paper once","b":"Take a bath in ice water daily"},
+  {"c":"Weird & Absurd","a":"Have a head shaped like a football","b":"Have feet shaped like flippers"},
+  {"c":"Weird & Absurd","a":"Sleep hanging upside down like a bat","b":"Sleep standing up like a horse"},
+  {"c":"Weird & Absurd","a":"Have rubbery bones","b":"Have no joints in your fingers"},
+  {"c":"Weird & Absurd","a":"Have an echo on every word you speak in public","b":"Have subtitles appear above your head for everything you say"},
+  {"c":"Everyday Quirks & Daily Life","a":"Give up coffee/caffeine forever","b":"Give up sweets forever"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have your phone battery capped at 10%","b":"Have 2G download speeds"},
+  {"c":"Work & Lifestyle","a":"Work a 4-day week with 10-hour days","b":"Work a 3-day week with 13-hour days"},
+  {"c":"Travel & Adventure","a":"Lose your phone in a foreign country","b":"Lose your luggage on every trip"},
+  {"c":"Everyday Quirks & Daily Life","a":"Never have to clean a bathroom again","b":"Never have to do dishes again"},
+  {"c":"Work & Lifestyle","a":"Earn $150k at a boring job","b":"Earn $50k doing your dream hobby"},
+  {"c":"Work & Lifestyle","a":"Have an unlimited wardrobe budget","b":"Have unlimited free dining at any restaurant"},
+  {"c":"Work & Lifestyle","a":"Live in a cramped downtown studio penthouse","b":"Live in a massive rural estate 2 hours from town"},
+  {"c":"Everyday Quirks & Daily Life","a":"Never have to wait in line again","b":"Never encounter red lights"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only eat food at room temperature","b":"Only drink lukewarm beverages"},
+  {"c":"Everyday Quirks & Daily Life","a":"Give up music for five years","b":"Give up all TV/movies for five years"},
+  {"c":"Work & Lifestyle","a":"Have an extra 2 hours every day","b":"Have an extra day added to every weekend"},
+  {"c":"Work & Lifestyle","a":"Live in a home with perfect soundproofing","b":"Live in a home with massive panoramic windows that cannot be covered"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always know what to wear instantly","b":"Always know what you want to eat"},
+  {"c":"Everyday Quirks & Daily Life","a":"Be forced to use public transit everywhere","b":"Drive a beat-up car that breaks down once a month"},
+  {"c":"Everyday Quirks & Daily Life","a":"Never have to wash your hair again (remains clean)","b":"Never have to brush your teeth again (remains healthy)"},
+  {"c":"Everyday Quirks & Daily Life","a":"Lose access to GPS navigation","b":"Lose access to online banking"},
+  {"c":"Work & Lifestyle","a":"Have a messy desk with a clear inbox","b":"Have an empty desk with 5,000 unread emails"},
+  {"c":"Work & Lifestyle","a":"Have noisy upstairs neighbors","b":"Have neighbors who constantly park in your driveway"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only eat breakfast foods for every meal","b":"Only eat dinner foods for every meal"},
+  {"c":"Work & Lifestyle","a":"Work in total silence","b":"Work in a loud open-plan office"},
+  {"c":"Everyday Quirks & Daily Life","a":"Cook an elaborate meal every night","b":"Eat the exact same healthy meal daily"},
+  {"c":"Everyday Quirks & Daily Life","a":"Never get another mosquito bite","b":"Never get a sunburn"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have unlimited free domestic flights","b":"Have unlimited free gas"},
+  {"c":"Everyday Quirks & Daily Life","a":"Be able to sleep anywhere on demand","b":"Never feel tired during the day"},
+  {"c":"Everyday Quirks & Daily Life","a":"Give up alcohol/soda forever","b":"Give up cheese forever"},
+  {"c":"Everyday Quirks & Daily Life","a":"Live without a microwave","b":"Live without a dishwasher"},
+  {"c":"Work & Lifestyle","a":"Have a personal chef","b":"Have a personal driver"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always have your shoes untied","b":"Always have your socks sliding down inside your shoes"},
+  {"c":"Everyday Quirks & Daily Life","a":"Never have to do laundry again","b":"Never have to grocery shop again"},
+  {"c":"Work & Lifestyle","a":"Have a high-stress, high-impact job","b":"Have a low-stress, unfulfilling job"},
+  {"c":"Everyday Quirks & Daily Life","a":"Lose your car keys once a week","b":"Misplace your phone twice a day"},
+  {"c":"Everyday Quirks & Daily Life","a":"Be forced to use voice memos instead of texts","b":"Call everyone on speakerphone"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only listen to your favorite artist's discography","b":"Explore new genres without ever hearing old favorites"},
+  {"c":"Everyday Quirks & Daily Life","a":"Live somewhere where it is dark 20 hours a day","b":"Live somewhere where it is light 20 hours a day"},
+  {"c":"Travel & Adventure","a":"Explore the depths of the ocean","b":"Travel to the moon"},
+  {"c":"Travel & Adventure","a":"Hike across the Sahara Desert","b":"Cross Antarctica on foot"},
+  {"c":"Travel & Adventure","a":"Spend a week alone in the Amazon Rainforest","b":"Spend a week in a haunted abandoned asylum"},
+  {"c":"Travel & Adventure","a":"Go on an all-expenses-paid luxury cruise","b":"Go on an adventurous backpacking tour across 10 countries"},
+  {"c":"Travel & Adventure","a":"Climb Mount Everest","b":"Skydive from the edge of space"},
+  {"c":"Travel & Adventure","a":"Sail solo across the Atlantic","b":"Drive a camper van through South America"},
+  {"c":"Travel & Adventure","a":"Live in a secluded mountain cabin","b":"Live on a private tropical island"},
+  {"c":"Travel & Adventure","a":"Swim in a cage with Great White sharks","b":"Track wild tigers in the jungle"},
+  {"c":"Travel & Adventure","a":"Visit every country on Earth for only 24 hours each","b":"Visit 5 countries for a year each"},
+  {"c":"Travel & Adventure","a":"Camp under the Northern Lights in freezing cold","b":"Sunbathe on a desert beach with no shade"},
+  {"c":"Travel & Adventure","a":"Take a submarine tour to the Titanic wreckage","b":"Take a suborbital space flight"},
+  {"c":"Travel & Adventure","a":"Live in Tokyo for a year","b":"Live in a quiet village in the Swiss Alps"},
+  {"c":"Travel & Adventure","a":"Explore ancient Egyptian tombs","b":"Explore unmapped Mayan ruins"},
+  {"c":"Travel & Adventure","a":"Surf a 30-foot wave","b":"Descend into an active volcanic crater"},
+  {"c":"Travel & Adventure","a":"Go on a safari in Kenya","b":"Dive the Great Barrier Reef"},
+  {"c":"Travel & Adventure","a":"Travel everywhere via sleeper train","b":"Fly first class everywhere"},
+  {"c":"Travel & Adventure","a":"Spend a winter in northern Norway","b":"Spend a summer in Death Valley"},
+  {"c":"Travel & Adventure","a":"Explore a massive cave system underground","b":"Pilot a glider plane over the Rockies"},
+  {"c":"Travel & Adventure","a":"Live off the grid in Alaska","b":"Live in an off-grid desert commune in Arizona"},
+  {"c":"Travel & Adventure","a":"Experience zero gravity for a day","b":"Deep-sea scuba dive without equipment"},
+  {"c":"Travel & Adventure","a":"Travel back in time to the Italian Renaissance","b":"Travel back in time to the Roaring Twenties"},
+  {"c":"Travel & Adventure","a":"Cross the Australian Outback on a dirt bike","b":"Kayak the length of the Mississippi River"},
+  {"c":"Travel & Adventure","a":"Stay in a 5-star hotel in a boring city","b":"Stay in a basic hostel in the most exciting city"},
+  {"c":"Travel & Adventure","a":"Bungee jump off a bridge into a canyon","b":"Zip-line over a tropical rainforest canopy"},
+  {"c":"Travel & Adventure","a":"Witness a total solar eclipse from a mountaintop","b":"See an erupting volcano at night"},
+  {"c":"Travel & Adventure","a":"Live as a nomad with no fixed address","b":"Stay in the exact same house your entire life"},
+  {"c":"Travel & Adventure","a":"Go white-water rafting on Class V rapids","b":"Rock climb a sheer cliff face without ropes"},
+  {"c":"Travel & Adventure","a":"Visit ancient Rome at its peak","b":"Visit Victorian London"},
+  {"c":"Travel & Adventure","a":"Travel with a group of 10 people","b":"Travel completely solo"},
+  {"c":"Travel & Adventure","a":"Live in a lighthouse during a storm","b":"Live on a remote weather station"},
+  {"c":"Travel & Adventure","a":"Explore an uncharted island","b":"Map a new subterranean river"},
+  {"c":"Travel & Adventure","a":"Take a year off to travel the world on a tight budget","b":"Take a 2-week ultra-luxury vacation"},
+  {"c":"Travel & Adventure","a":"Swim with wild orcas","b":"Encounter a grizzly bear in the wild from a safe distance"},
+  {"c":"Travel & Adventure","a":"Cross Siberia on the Trans-Siberian Railway","b":"Drive Route 66 in a classic car"},
+  {"c":"Travel & Adventure","a":"Go paragliding over the Alps","b":"Go sandboarding down massive dunes in Namibia"},
+  {"c":"Travel & Adventure","a":"Stay in an ice hotel","b":"Stay in an underwater hotel suite"},
+  {"c":"Travel & Adventure","a":"Visit the International Space Station for 3 days","b":"Spend a month on a marine research vessel"},
+  {"c":"Travel & Adventure","a":"Learn to dog-sled across Alaska","b":"Ride a camel across Morocco"},
+  {"c":"Travel & Adventure","a":"Spend a month in a Buddhist monastery in silence","b":"Spend a month at a crowded music festival"},
+  {"c":"Superpowers & Sci-Fi","a":"Be the first person to set foot on Mars","b":"Be the person who discovers intelligent alien life"},
+  {"c":"Social & Awkward Situations","a":"Accidentally send a screenshot of a conversation to the person you were talking about","b":"Reply-all to a company-wide email with a private complaint"},
+  {"c":"Social & Awkward Situations","a":"Have everyone you know read all your private text messages","b":"Have everyone you know see your entire financial history"},
+  {"c":"Social & Awkward Situations","a":"Clog the toilet at a brand-new partner's apartment","b":"Clog the toilet at your boss's dinner party"},
+  {"c":"Social & Awkward Situations","a":"Be universally loved by strangers but disliked by your close friends","b":"Be loved by close friends and universally hated by the public"},
+  {"c":"Social & Awkward Situations","a":"Always have to say the unfiltered truth to your in-laws","b":"Never be able to complain about anything ever again"},
+  {"c":"Social & Awkward Situations","a":"Have your ex give a 5-minute speech at your wedding","b":"Give a 5-minute speech at your ex's wedding"},
+  {"c":"Social & Awkward Situations","a":"Accidentally call your boss 'babe' on a conference call","b":"Accidentally like a post from an ex from 7 years ago"},
+  {"c":"Social & Awkward Situations","a":"Be trapped in an elevator with your worst enemy for 6 hours","b":"Be trapped in an elevator with an overly enthusiastic stranger for 18 hours"},
+  {"c":"Social & Awkward Situations","a":"Wake up in a random city with no phone and $500","b":"Wake up at home with your phone wiped and all accounts locked for 2 weeks"},
+  {"c":"Social & Awkward Situations","a":"Have a permanent bad haircut that you cannot cover","b":"Wear clothes that are two sizes too small to every social event"},
+  {"c":"Career, Money & Lifestyle","a":"Make $80k working 20 hours a week from home","b":"Make $250k working 70 hours a week in a high-stress office"},
+  {"c":"Career, Money & Lifestyle","a":"Have unlimited free international flights forever","b":"Never pay for housing/rent/mortgage again"},
+  {"c":"Career, Money & Lifestyle","a":"Work for an incompetent micromanager who is nice","b":"Work for a brilliant leader who is extremely rude"},
+  {"c":"Career, Money & Lifestyle","a":"Retire comfortably tomorrow with no option to earn side income","b":"Work at your dream job until age 70"},
+  {"c":"Career, Money & Lifestyle","a":"Lose all your personal photos and media","b":"Lose half of your current savings"},
+  {"c":"Career, Money & Lifestyle","a":"Be forced to commute 90 minutes each way in traffic with great podcasts","b":"Commute 30 minutes on a packed subway with no seat"},
+  {"c":"Career, Money & Lifestyle","a":"Have a guaranteed 4-day workweek forever","b":"Have 8 weeks of paid vacation you can take whenever you want"},
+  {"c":"Career, Money & Lifestyle","a":"Always be underpaid but praised constantly","b":"Always be overpaid but routinely criticized publicly"},
+  {"c":"Career, Money & Lifestyle","a":"Buy your absolute dream house in a boring town with no nightlife","b":"Rent a cramped apartment in the world's most vibrant city"},
+  {"c":"Career, Money & Lifestyle","a":"Have total financial independence at 50","b":"Have moderate financial comfort starting right now"},
+  {"c":"Moral Dilemmas","a":"Know the exact time, place, and cause of your death","b":"Live without ever knowing"},
+  {"c":"Moral Dilemmas","a":"Erase the memory of your most painful heartbreak","b":"Double the emotional weight of your happiest memory"},
+  {"c":"Moral Dilemmas","a":"Save the lives of 5 random people globally","b":"Guarantee lifelong health and wealth for your best friend"},
+  {"c":"Moral Dilemmas","a":"Live in a world where no one can lie","b":"Live in a world where no one knows when anyone is lying"},
+  {"c":"Moral Dilemmas","a":"Have the power to instantly fix any political crisis","b":"Instantly cure all common chronic illnesses"},
+  {"c":"Moral Dilemmas","a":"Give up all alcohol, caffeine, and junk food forever","b":"Give up your primary creative/recreational hobby"},
+  {"c":"Moral Dilemmas","a":"Know every unflattering thing your friends have said about you","b":"Never know what anyone actually thinks of you"},
+  {"c":"Moral Dilemmas","a":"Be 20% smarter than everyone else and constantly frustrated","b":"Be 20% less perceptive and blissfully content"},
+  {"c":"Moral Dilemmas","a":"Undo your single biggest regret in life","b":"Receive $100,000 in cash right now"},
+  {"c":"Moral Dilemmas","a":"Live in total solitude in luxury for 5 years","b":"Live in a tiny studio with 4 roommates for 2 years"},
+  {"c":"Drinking & Party Prompts","a":"Take a shot of hot sauce","b":"Take a shot of warm mayonnaise"},
+  {"c":"Drinking & Party Prompts","a":"Have your search engine autocomplete history projected onto a screen for 30 seconds","b":"Let the group read your last 5 DMs"},
+  {"c":"Drinking & Party Prompts","a":"Only be able to listen to the music you loved at age 14 for the rest of your life","b":"Only listen to current top 40 radio"},
+  {"c":"Drinking & Party Prompts","a":"Lose your passport on day one of an international trip","b":"Break your phone screen on day one"},
+  {"c":"Drinking & Party Prompts","a":"Always have a mildly warm beer","b":"Always drink overly sweet, watered-down cocktails"},
+  {"c":"Drinking & Party Prompts","a":"Have every meal you eat be 10% too salty","b":"Have every meal you eat be 10% undercooked"},
+  {"c":"Drinking & Party Prompts","a":"Be forced to wear business casual to every beach/pool","b":"Wear swimwear to every nice restaurant"},
+  {"c":"Drinking & Party Prompts","a":"Have to sing your order at every drive-thru/counter","b":"Pay 25% extra on every purchase"},
+  {"c":"Drinking & Party Prompts","a":"Spend 24 hours straight in a casino with $500 you must gamble","b":"Spend 24 hours straight in an empty airport"},
+  {"c":"Drinking & Party Prompts","a":"Give a 20-minute presentation on a topic you know nothing about to 500 executives","b":"Perform stand-up comedy for 10 minutes at a packed club"},
+  {"c":"Casual & Icebreakers","a":"Always have the perfect parking spot","b":"Always have the shortest checkout line"},
+  {"c":"Casual & Icebreakers","a":"Be able to instantly learn any recipe","b":"Be able to instantly learn any dance"},
+  {"c":"Casual & Icebreakers","a":"Always recognize a song within the first two seconds","b":"Always recognize a movie from its opening scene"},
+  {"c":"Casual & Icebreakers","a":"Always choose the fastest elevator","b":"Always choose the quietest seat in a crowded room"},
+  {"c":"Casual & Icebreakers","a":"Be able to fix any minor household problem","b":"Be able to cook a restaurant-quality meal from leftovers"},
+  {"c":"Casual & Icebreakers","a":"Have every weekend be three days long","b":"Have every workday end at 2 p.m."},
+  {"c":"Casual & Icebreakers","a":"Always have the perfect temperature wherever you go","b":"Always have the perfect lighting for photos"},
+  {"c":"Casual & Icebreakers","a":"Own a home theater with every movie ever made","b":"Own a library containing every book ever published"},
+  {"c":"Casual & Icebreakers","a":"Be amazing at every board game","b":"Be amazing at every card game"},
+  {"c":"Casual & Icebreakers","a":"Have a personal stylist who knows your taste perfectly","b":"Have a personal chef who knows your favorite meals perfectly"},
+  {"c":"Weird & Absurd","a":"Have a tiny rain cloud follow you everywhere","b":"Have a tiny sunbeam follow you everywhere"},
+  {"c":"Weird & Absurd","a":"Have your shadow randomly wave at people","b":"Have your reflection randomly wink at people"},
+  {"c":"Weird & Absurd","a":"Have every door you open play a random sound effect","b":"Have every chair you sit in announce your name"},
+  {"c":"Weird & Absurd","a":"Have to wear shoes that squeak with every step","b":"Have a jacket that rustles loudly whenever you move"},
+  {"c":"Weird & Absurd","a":"Have a tiny marching band live in your backpack","b":"Have a tiny orchestra live under your bed"},
+  {"c":"Weird & Absurd","a":"Have your hair automatically style itself every morning","b":"Have your eyebrows automatically change shape with your mood"},
+  {"c":"Weird & Absurd","a":"Have a personal thunderclap whenever you enter a room","b":"Have a spotlight follow you whenever you speak"},
+  {"c":"Weird & Absurd","a":"Have every photograph of you show a random facial expression","b":"Have every mirror show you wearing a different outfit"},
+  {"c":"Weird & Absurd","a":"Have to high-five every dog you pass","b":"Have to bow to every cat you pass"},
+  {"c":"Weird & Absurd","a":"Have a permanent cartoon sound effect for every sneeze","b":"Have a permanent cartoon sound effect for every hiccup"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have your alarm clock choose its own wake-up time each day","b":"Have your bedtime chosen by a random number generator"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only be able to use one pillow forever","b":"Only be able to use one blanket forever"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have every appliance in your home make one extra beep","b":"Have every light switch require two clicks"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always have exactly one sock go missing from every pair","b":"Always have one shirt come out of every wash slightly inside out"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only be able to drink beverages through a straw","b":"Only be able to eat meals with chopsticks"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have your shower water pressure be perfect but the temperature unpredictable","b":"Have perfect shower temperature but weak water pressure"},
+  {"c":"Everyday Quirks & Daily Life","a":"Always have crumbs in your keyboard","b":"Always have fingerprints on every screen you own"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have every zipper get stuck once a day","b":"Have every button take three tries to fasten"},
+  {"c":"Everyday Quirks & Daily Life","a":"Only be able to buy groceries one item at a time","b":"Only be able to carry one grocery bag at a time"},
+  {"c":"Everyday Quirks & Daily Life","a":"Have your favorite food always be slightly too hot","b":"Have your favorite drink always be slightly too cold"},
+  {"c":"Social & Awkward Situations","a":"Accidentally wave back at someone who was waving at somebody else once a week","b":"Accidentally call someone by the wrong name once a week"},
+  {"c":"Social & Awkward Situations","a":"Have to introduce yourself with a fake accent at every new gathering","b":"Have to invent a new handshake with everyone you meet"},
+  {"c":"Social & Awkward Situations","a":"Have your phone ring with your own voice saying 'answer me'","b":"Have your notification sound be a loud rooster"},
+  {"c":"Social & Awkward Situations","a":"Be introduced to everyone at a party with an embarrassing nickname","b":"Have everyone at a party forget your name five minutes after meeting you"},
+  {"c":"Social & Awkward Situations","a":"Have to make small talk with a stranger for 30 minutes","b":"Have to make a five-minute toast at every dinner party"},
+  {"c":"Social & Awkward Situations","a":"Always be the first person to arrive at parties","b":"Always be the last person to leave"},
+  {"c":"Social & Awkward Situations","a":"Have a stranger compliment your outfit every day","b":"Have a stranger critique your outfit every day"},
+  {"c":"Social & Awkward Situations","a":"Have your most awkward childhood photo become your profile picture for a year","b":"Have your most awkward school video become your voicemail greeting for a year"},
+  {"c":"Social & Awkward Situations","a":"Forget one person's name every time you attend a wedding","b":"Forget one person's name every time you attend a work event"},
+  {"c":"Social & Awkward Situations","a":"Have to give an impromptu toast at your own birthday party","b":"Have to organize the entertainment at someone else's birthday party"},
+  {"c":"Career, Money & Lifestyle","a":"Own a successful business that requires constant travel","b":"Own a modest business that lets you stay home every night"},
+  {"c":"Career, Money & Lifestyle","a":"Get a large raise but lose four weeks of vacation","b":"Keep your salary but get four extra weeks of vacation"},
+  {"c":"Career, Money & Lifestyle","a":"Have a job with unlimited creative freedom and unpredictable income","b":"Have a job with fixed income and almost no creative freedom"},
+  {"c":"Career, Money & Lifestyle","a":"Work for yourself with no coworkers","b":"Have an excellent team but a demanding boss"},
+  {"c":"Career, Money & Lifestyle","a":"Receive a guaranteed $1,000 every month forever","b":"Receive a one-time $250,000 payment"},
+  {"c":"Career, Money & Lifestyle","a":"Have every purchase you make be 10% cheaper","b":"Have your income be 10% higher forever"},
+  {"c":"Career, Money & Lifestyle","a":"Own your dream car but never modify it","b":"Own an ordinary car that you can customize however you want"},
+  {"c":"Career, Money & Lifestyle","a":"Have a huge home with a tiny kitchen","b":"Have a tiny home with a professional-grade kitchen"},
+  {"c":"Career, Money & Lifestyle","a":"Be famous for your work but have no privacy at restaurants","b":"Remain unknown but have complete freedom to go anywhere unnoticed"},
+  {"c":"Career, Money & Lifestyle","a":"Take a year-long sabbatical with half pay","b":"Work continuously but retire five years earlier"},
+  {"c":"Travel & Adventure","a":"Take a road trip with no planned route","b":"Take a trip where every day's itinerary is planned for you"},
+  {"c":"Travel & Adventure","a":"Spend a week in a floating houseboat","b":"Spend a week in a treehouse deep in a forest"},
+  {"c":"Travel & Adventure","a":"Visit a country famous for its food","b":"Visit a country famous for its landscapes"},
+  {"c":"Travel & Adventure","a":"Take a scenic train through the Alps","b":"Take a scenic train through the Canadian Rockies"},
+  {"c":"Travel & Adventure","a":"Explore a famous national park by horseback","b":"Explore it by kayak"},
+  {"c":"Travel & Adventure","a":"Spend a month traveling only by motorcycle","b":"Spend a month traveling only by bicycle"},
+  {"c":"Travel & Adventure","a":"Stay in a historic castle","b":"Stay in a futuristic smart hotel"},
+  {"c":"Travel & Adventure","a":"Take a road trip along the Pacific Coast","b":"Take a road trip through the American Southwest"},
+  {"c":"Travel & Adventure","a":"Watch the sunrise from a volcano","b":"Watch the sunset from a glacier"},
+  {"c":"Travel & Adventure","a":"Spend a week on a sailboat with a small crew","b":"Spend a week on a remote ranch with a small crew"},
+  {"c":"Relationships & Romance","a":"Have a partner who always knows when you need space","b":"Have a partner who always knows when you need company"},
+  {"c":"Relationships & Romance","a":"Have amazing chemistry but completely different hobbies","b":"Have identical hobbies but only average chemistry"},
+  {"c":"Relationships & Romance","a":"Receive handwritten love letters","b":"Receive surprise weekend getaways"},
+  {"c":"Relationships & Romance","a":"Have your partner remember every little detail you mention","b":"Have your partner always know exactly how to make you laugh"},
+  {"c":"Relationships & Romance","a":"Have one spectacular date every month","b":"Have a small romantic moment every day"},
+  {"c":"Relationships & Romance","a":"Be with someone who loves hosting people","b":"Be with someone who loves quiet nights at home"},
+  {"c":"Relationships & Romance","a":"Have your partner cook every dinner","b":"Have your partner plan every vacation"},
+  {"c":"Relationships & Romance","a":"Always know when your partner needs encouragement","b":"Always know when your partner needs honesty"},
+  {"c":"Relationships & Romance","a":"Have a relationship full of adventure but frequent disagreements","b":"Have a peaceful relationship with very little excitement"},
+  {"c":"Relationships & Romance","a":"Grow old with your first love","b":"Meet your perfect match later in life"},
+  {"c":"Food & Drink","a":"Only eat foods that are crunchy","b":"Only eat foods that are creamy"},
+  {"c":"Food & Drink","a":"Only eat foods you can eat with your hands","b":"Only eat foods you need a fork and knife for"},
+  {"c":"Food & Drink","a":"Have unlimited tacos but no pizza","b":"Have unlimited pizza but no tacos"},
+  {"c":"Food & Drink","a":"Only drink sparkling water","b":"Only drink still water"},
+  {"c":"Food & Drink","a":"Have every meal cooked over a campfire","b":"Have every meal cooked in a high-end restaurant kitchen"},
+  {"c":"Food & Drink","a":"Be able to recreate any fast-food item at home","b":"Be able to recreate any restaurant dessert at home"},
+  {"c":"Food & Drink","a":"Have perfect coffee every morning","b":"Have perfect steak every weekend"},
+  {"c":"Food & Drink","a":"Be able to make perfect soup from anything","b":"Be able to make perfect sandwiches from anything"},
+  {"c":"Food & Drink","a":"Eat your favorite meal once a week forever","b":"Try a completely different meal every day forever"},
+  {"c":"Food & Drink","a":"Have a refrigerator that always contains your favorite snacks","b":"Have a freezer that always contains your favorite desserts"},
+  {"c":"Entertainment & Pop Culture","a":"Watch only comedies for a year","b":"Watch only thrillers for a year"},
+  {"c":"Entertainment & Pop Culture","a":"See your favorite band live from the front row","b":"Meet your favorite actor for an hour"},
+  {"c":"Entertainment & Pop Culture","a":"Be able to erase one movie from your memory and watch it again","b":"Be able to erase one album from your memory and hear it again"},
+  {"c":"Entertainment & Pop Culture","a":"Have a guaranteed seat at every major sporting event","b":"Have a guaranteed ticket to every major concert"},
+  {"c":"Entertainment & Pop Culture","a":"Be cast as the lead in a great movie that becomes a classic","b":"Write a hit TV series that runs for ten seasons"},
+  {"c":"Entertainment & Pop Culture","a":"Own an arcade filled with every classic game","b":"Own a private screening room with every movie release"},
+  {"c":"Entertainment & Pop Culture","a":"Only listen to albums from one decade","b":"Only watch movies from one decade"},
+  {"c":"Entertainment & Pop Culture","a":"Have your favorite fictional character become real","b":"Be able to enter your favorite fictional universe for one day"},
+  {"c":"Entertainment & Pop Culture","a":"Know the ending of every unfinished TV series","b":"Know the release date of every future video game"},
+  {"c":"Entertainment & Pop Culture","a":"Be able to attend any awards show","b":"Be able to attend any major championship game"},
+  {"c":"Personal Growth & Choices","a":"Master any one skill instantly","b":"Become naturally confident in every social situation"},
+  {"c":"Personal Growth & Choices","a":"Never procrastinate again","b":"Never overthink a decision again"},
+  {"c":"Personal Growth & Choices","a":"Always understand what other people need from you","b":"Always understand what you need from yourself"},
+  {"c":"Personal Growth & Choices","a":"Be able to forgive anyone easily","b":"Be able to forget any embarrassment instantly"},
+  {"c":"Personal Growth & Choices","a":"Have perfect patience","b":"Have perfect motivation"},
+  {"c":"Personal Growth & Choices","a":"Always trust your first instinct","b":"Always have enough time to carefully analyze every decision"},
+  {"c":"Personal Growth & Choices","a":"Be remembered as extremely kind","b":"Be remembered as extremely wise"},
+  {"c":"Personal Growth & Choices","a":"Never feel embarrassed again","b":"Never feel jealous again"},
+  {"c":"Personal Growth & Choices","a":"Know your greatest strength","b":"Know your biggest blind spot"},
+  {"c":"Personal Growth & Choices","a":"Have one guaranteed life-changing opportunity","b":"Have ten smaller opportunities that could improve your life"},
+  {"c":"Drinking & Party Prompts","a":"Have to wear a ridiculous hat for every party","b":"Have to wear sunglasses indoors for every party"},
+  {"c":"Drinking & Party Prompts","a":"Let the group choose your karaoke song","b":"Let the group choose your dance for the next song"},
+  {"c":"Drinking & Party Prompts","a":"Have your most-used emoji displayed on your forehead for an hour","b":"Have your most-used phrase printed on your shirt for a night"},
+  {"c":"Drinking & Party Prompts","a":"Be responsible for choosing the music all night","b":"Be responsible for choosing the food all night"},
+  {"c":"Drinking & Party Prompts","a":"Have to tell a harmless embarrassing story at every party","b":"Have to perform a harmless impression at every party"},
+  {"c":"Drinking & Party Prompts","a":"Play trivia against the smartest person in the room","b":"Play charades against the most competitive person in the room"},
+  {"c":"Drinking & Party Prompts","a":"Have everyone vote on your next hairstyle","b":"Have everyone vote on your next vacation destination"},
+  {"c":"Drinking & Party Prompts","a":"Lose your voice for the entire night","b":"Lose your ability to use your phone for the entire night"},
+  {"c":"Drinking & Party Prompts","a":"Be the designated photographer at every party","b":"Be the designated DJ at every party"},
+  {"c":"Drinking & Party Prompts","a":"Have to start every conversation with a joke","b":"Have to end every conversation with a compliment"}
+];
+
+const wyrPlaceholder = document.getElementById("wyrPlaceholder");
+const wyrContent = document.getElementById("wyrContent");
+const wyrCard = document.getElementById("wyrCard");
+const wyrCategory = document.getElementById("wyrCategory");
+const wyrOptionA = document.getElementById("wyrOptionA");
+const wyrOptionB = document.getElementById("wyrOptionB");
+const wyrCounter = document.getElementById("wyrCounter");
+let lastWyr = -1;
+let wyrCount = 0;
+
+function newDilemma() {
+  let i;
+  do { i = Math.floor(Math.random() * wyr.length); } while (i === lastWyr && wyr.length > 1);
+  lastWyr = i;
+  const item = wyr[i];
+  wyrCategory.textContent = item.c;
+  wyrOptionA.textContent = item.a;
+  wyrOptionB.textContent = item.b;
+  wyrPlaceholder.style.display = "none";
+  wyrContent.style.display = "block";
+  wyrCount++;
+  wyrCounter.textContent = `Dilemmas shown: ${wyrCount} / ${wyr.length}`;
+  wyrCard.classList.remove("pop");
+  void wyrCard.offsetWidth;
+  wyrCard.classList.add("pop");
+}
+document.getElementById("wyrBtn").addEventListener("click", newDilemma);
+
+/* ---------- Movie Guide ---------- */
+const MOVIE_PROXY_URL = "https://ohnd-movie-proxy.ohndtomatometer.workers.dev";
+
+const movieEls = {
+  query: document.getElementById("movieQuery"),
+  searchBtn: document.getElementById("movieSearchBtn"),
+  status: document.getElementById("movieStatus"),
+  card: document.getElementById("movieCard"),
+  poster: document.getElementById("moviePoster"),
+  title: document.getElementById("movieTitle"),
+  meta: document.getElementById("movieMeta"),
+  scores: document.getElementById("movieScores"),
+  plot: document.getElementById("moviePlot"),
+  actors: document.getElementById("movieActors"),
+  director: document.getElementById("movieDirector"),
+};
+
+function setMovieStatus(msg, isError) {
+  movieEls.status.textContent = msg || "";
+  movieEls.status.classList.toggle("error", !!isError);
+}
+
+function ratingClass(value) {
+  const num = parseInt(value, 10);
+  if (isNaN(num)) return "";
+  return num >= 60 ? "fresh" : "rotten";
+}
+
+async function searchMovie() {
+  const title = movieEls.query.value.trim();
+  if (!title) {
+    setMovieStatus("Type a movie title first.", true);
+    return;
+  }
+  movieEls.card.classList.remove("visible");
+  setMovieStatus("Searching...");
+
+  try {
+    const url = `${MOVIE_PROXY_URL}/?t=${encodeURIComponent(title)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.Response === "False") {
+      setMovieStatus(data.Error || "Movie not found.", true);
+      return;
+    }
+
+    setMovieStatus("");
+    movieEls.title.textContent = `${data.Title} (${data.Year})`;
+    movieEls.meta.textContent = [data.Rated, data.Runtime, data.Genre].filter(Boolean).join(" • ");
+    movieEls.poster.src = (data.Poster && data.Poster !== "N/A") ? data.Poster : "";
+    movieEls.poster.alt = data.Title;
+    movieEls.plot.textContent = data.Plot && data.Plot !== "N/A" ? data.Plot : "No synopsis available.";
+    movieEls.actors.textContent = data.Actors && data.Actors !== "N/A" ? data.Actors : "Not listed.";
+    movieEls.director.textContent = data.Director && data.Director !== "N/A" ? data.Director : "Not listed.";
+
+    movieEls.scores.innerHTML = "";
+    const ratings = data.Ratings || [];
+    ratings.forEach(r => {
+      const pill = document.createElement("div");
+      pill.className = "score-pill";
+      const cls = r.Source === "Rotten Tomatoes" ? ratingClass(r.Value) : "";
+      pill.innerHTML = `<span>${r.Source}</span><span class="val ${cls}">${r.Value}</span>`;
+      movieEls.scores.appendChild(pill);
+    });
+    if (data.Metascore && data.Metascore !== "N/A" && !ratings.some(r => r.Source === "Metacritic")) {
+      const pill = document.createElement("div");
+      pill.className = "score-pill";
+      pill.innerHTML = `<span>Metascore</span><span class="val">${data.Metascore}</span>`;
+      movieEls.scores.appendChild(pill);
+    }
+
+    movieEls.card.classList.add("visible");
+  } catch (err) {
+    setMovieStatus("Something went wrong. Check your connection and try again.", true);
+  }
+}
+
+movieEls.searchBtn.addEventListener("click", searchMovie);
+movieEls.query.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") searchMovie();
+});
+
+/* ---------- PWA service worker registration ---------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
