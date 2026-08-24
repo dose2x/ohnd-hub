@@ -6,8 +6,8 @@
 <title>OHND Race Host Game Hub</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7a3fb0">
-<link rel="icon" type="image/png" href="ohnd-logo.png">
-<link rel="apple-touch-icon" href="ohnd-logo.png">
+<link rel="icon" type="image/png" href="ohnd-logo-skull.png">
+<link rel="apple-touch-icon" href="ohnd-logo-skull.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="OHND Hub">
@@ -282,8 +282,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--white);
-    border-top: 1px solid var(--border);
+    background: var(--purple-dark);
     display: flex;
     box-shadow: 0 -4px 18px var(--shadow);
     padding-bottom: env(safe-area-inset-bottom);
@@ -297,7 +296,7 @@
     align-items: center;
     gap: 3px;
     padding: 10px 2px 8px;
-    color: var(--muted);
+    color: rgba(255, 255, 255, 0.55);
     font-size: 0.66rem;
     font-weight: 600;
   }
@@ -310,20 +309,20 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .tab-btn.active { color: var(--purple); }
+  .tab-btn.active { color: var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="app-header">
-  <img src="ohnd-logo.png" alt="OHND logo">
+  <img src="ohnd-logo-skull.png" alt="OHND logo">
   <span>OHND Race Host Game Hub</span>
 </div>
 
 <main>
 
   <!-- MOVIE GUIDE -->
-  <section class="screen active" id="screen-movies">
+  <section class="screen" id="screen-movies">
     <h1 class="screen-title">Movie Guide</h1>
     <p class="screen-subtitle">Rotten Tomatoes score, synopsis &amp; cast in one search</p>
 
@@ -356,7 +355,7 @@
   </section>
 
   <!-- DAD JOKES -->
-  <section class="screen" id="screen-jokes">
+  <section class="screen active" id="screen-jokes">
     <h1 class="screen-title">Dad Jokes</h1>
     <p class="screen-subtitle">Push it. You know you want to.</p>
     <div class="card" id="jokeCard">
@@ -410,17 +409,17 @@
 </main>
 
 <nav class="tabbar">
-  <button class="tab-btn active" data-screen="movies">
-    <svg viewBox="0 0 24 24"><path d="M3 8.5h18"/><path d="M3 8.5 5 4l3 1-1.6 3.5"/><path d="M8.3 8.5 10.8 4l3 1-1.5 3.5"/><path d="M13.6 8.5 16 4l3 1-1.6 3.5"/><rect x="3" y="8.5" width="18" height="11.5" rx="1.5"/></svg>
-    <span>Movies</span>
-  </button>
-  <button class="tab-btn" data-screen="jokes">
+  <button class="tab-btn active" data-screen="jokes">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.7" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15.3" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M7.5 14.2c1.2 1.7 3 2.6 4.5 2.6s3.3-.9 4.5-2.6"/></svg>
     <span>Jokes</span>
   </button>
   <button class="tab-btn" data-screen="wyr">
     <svg viewBox="0 0 24 24"><path d="M3 6h4l5 12h6"/><path d="M14 6h4"/><path d="M3 18h4l3-7"/><path d="M18 3l3 3-3 3"/><path d="M18 15l3 3-3 3"/></svg>
     <span>WYR</span>
+  </button>
+  <button class="tab-btn" data-screen="movies">
+    <svg viewBox="0 0 24 24"><path d="M3 8.5h18"/><path d="M3 8.5 5 4l3 1-1.6 3.5"/><path d="M8.3 8.5 10.8 4l3 1-1.5 3.5"/><path d="M13.6 8.5 16 4l3 1-1.6 3.5"/><rect x="3" y="8.5" width="18" height="11.5" rx="1.5"/></svg>
+    <span>Movies</span>
   </button>
   <button class="tab-btn" data-screen="discord">
     <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><circle cx="16" cy="10.5" r="2.6"/><path d="M4 19c0-3 2.5-5 5-5s5 2 5 5"/><path d="M13.5 19c.3-2 1.7-3.5 3.5-3.5 2 0 3.5 1.5 4 3.5"/></svg>

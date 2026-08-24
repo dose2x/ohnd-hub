@@ -1,5 +1,5 @@
-const CACHE = "ohnd-hub-v1";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./ohnd-logo.png"];
+const CACHE = "ohnd-hub-v2";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./ohnd-logo-skull.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
