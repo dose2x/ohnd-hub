@@ -126,9 +126,10 @@
     box-shadow: 0 12px 30px var(--shadow);
     border: 2px solid var(--purple-mid);
     margin-bottom: 22px;
-    transition: transform 0.15s ease;
   }
-  .card.pop { transform: scale(1.02); }
+  .pop { animation: pop 0.3s ease; }
+  @keyframes pop { 50% { transform: scale(1.03); } }
+  @media (prefers-reduced-motion: reduce) { .pop { animation: none; } }
   .card-text { font-size: 1.2rem; line-height: 1.5; }
 
   .action-row { text-align: center; }
@@ -162,9 +163,7 @@
     border: 2px solid var(--purple-mid);
     margin-bottom: 22px;
     text-align: center;
-    transition: transform 0.15s ease;
   }
-  .wyr-card.pop { transform: scale(1.02); }
   .wyr-option {
     background: var(--purple-light);
     border: 1px solid var(--border);

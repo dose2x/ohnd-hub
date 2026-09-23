@@ -523,7 +523,6 @@ const jokes = [
   "I dreamed about drowning in an ocean made out of orange soda last night. It took me a while to work out it was just a Fanta sea.",
   "I had a dream that I was a muffler last night. I woke up exhausted!",
   "Doctor you've got you help me, I'm addicted to twitter. Doctor: I don't follow you.",
-  "My boss told me to have a good day. So I went home...",
   "I broke my finger at work today, on the other hand I'm completely fine.",
   "I went to a book store and asked the saleswoman where the Self Help section was, she said if she told me it would defeat the purpose.",
   "How does a scientist freshen their breath? With experi-mints!",
@@ -611,7 +610,6 @@ const jokes = [
   "What did the grape do when he got stepped on? He let out a little wine.",
   "What did the 0 say to the 8? Nice belt.",
   "Why was the picture sent to prison? It was framed.",
-  "Two peanuts were walking down the street. One was a salted.",
   "I burned 2000 calories today, I left my food in the oven for too long.",
   "Cosmetic surgery used to be such a taboo subject. Now you can talk about Botox and nobody raises an eyebrow.",
   "How can you tell a vampire has a cold? They start coffin.",
@@ -845,7 +843,7 @@ const wyr = [
   {"c":"Weird & Absurd","a":"Eat a whole raw onion like an apple","b":"Drink a cup of olive oil"},
   {"c":"Everyday Quirks & Daily Life","a":"Always have sticky fingers","b":"Always have sand in your bed"},
   {"c":"Weird & Absurd","a":"Have eyebrows made of feathers","b":"Have an unremovable pirate mustache"},
-  {"c":"Social & Work","a":"Shout everything you think during meetings","b":"Whisper everything you say in casual conversation"},
+  {"c":"Work & Lifestyle","a":"Shout everything you think during meetings","b":"Whisper everything you say in casual conversation"},
   {"c":"Everyday Quirks & Daily Life","a":"Be forced to use sandpaper as toilet paper once","b":"Take a bath in ice water daily"},
   {"c":"Weird & Absurd","a":"Have a head shaped like a football","b":"Have feet shaped like flippers"},
   {"c":"Weird & Absurd","a":"Sleep hanging upside down like a bat","b":"Sleep standing up like a horse"},
@@ -1164,14 +1162,15 @@ async function searchMovie() {
   try {
     const url = `${MOVIE_PROXY_URL}/?t=${encodeURIComponent(title)}`;
     const res = await fetch(url, { signal: movieRequest.signal });
-    const data = await res.json();
+    // A Worker/Cloudflare error page isn't JSON; treat it like any other failed lookup.
+    const data = await res.json().catch(() => ({}));
 
-    if (!res.ok || data.Response === "False") {
+    if (!res.ok || data.Response !== "True") {
       setMovieStatus(data.Error || "Movie not found.", true);
       return;
     }
 
-    movieEls.title.textContent = `${data.Title} (${data.Year})`;
+    movieEls.title.textContent = has(data.Year) ? `${data.Title} (${data.Year})` : data.Title;
     movieEls.meta.textContent = [data.Rated, data.Runtime, data.Genre].filter(has).join(" • ");
     movieEls.poster.hidden = !has(data.Poster);
     if (has(data.Poster)) {
@@ -1197,6 +1196,9 @@ async function searchMovie() {
     setMovieStatus("Something went wrong. Check your connection and try again.", true);
   }
 }
+
+// OMDb poster links sometimes 404; hide the image instead of showing a broken icon.
+movieEls.poster.addEventListener("error", () => { movieEls.poster.hidden = true; });
 
 movieEls.searchBtn.addEventListener("click", searchMovie);
 movieEls.query.addEventListener("keydown", (e) => {

@@ -1,4 +1,4 @@
-const CACHE = "ohnd-hub-v3";
+const CACHE = "ohnd-hub-v4";
 const ASSETS = ["./", "./index.html", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -18,10 +18,11 @@ self.addEventListener("activate", (event) => {
 });
 
 // Save a copy of a successful response; never cache errors.
-function remember(request, response) {
+// waitUntil keeps the worker alive until the write finishes.
+function remember(event, response) {
   if (response.ok) {
     const copy = response.clone(); // clone now, before the browser starts reading the body
-    caches.open(CACHE).then((cache) => cache.put(request, copy));
+    event.waitUntil(caches.open(CACHE).then((cache) => cache.put(event.request, copy)));
   }
   return response;
 }
@@ -36,7 +37,7 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate" || request.url.endsWith("/app.js")) {
     event.respondWith(
       fetch(request)
-        .then((response) => remember(request, response))
+        .then((response) => remember(event, response))
         .catch(() => caches.match(request).then((hit) =>
           hit || (request.mode === "navigate" ? caches.match("./index.html") : Response.error())))
     );
@@ -45,6 +46,6 @@ self.addEventListener("fetch", (event) => {
 
   // Icons and manifest: cache-first.
   event.respondWith(
-    caches.match(request).then((hit) => hit || fetch(request).then((response) => remember(request, response)))
+    caches.match(request).then((hit) => hit || fetch(request).then((response) => remember(event, response)))
   );
 });
