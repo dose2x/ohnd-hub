@@ -20,7 +20,13 @@ It installs with its own icon and opens full-screen like a native app. The Jokes
 
 ## Run locally
 
-Just open `index.html` in a browser — no build step, no dependencies. (The Movie Guide tab's search will fail locally due to CORS — the lookup API only allows requests from the live GitHub Pages domain.)
+No build step and no dependencies, but serve it over HTTP rather than opening the file directly. The page's security policy and the service worker don't work from `file://`. Use port **4173**: it's on the movie Worker's CORS allowlist, so the Movie Guide tab works locally too.
+
+```bash
+python -m http.server 4173
+```
+
+Then open http://localhost:4173.
 
 ## Movie Guide: Rotten Tomatoes fallback
 
