@@ -272,7 +272,15 @@
     justify-content: center;
     color: var(--purple);
   }
-  .placeholder-icon svg { width: 44px; height: 44px; }
+  .placeholder-icon svg {
+    width: 44px;
+    height: 44px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
   .placeholder-screen p {
     color: var(--muted);
     line-height: 1.5;
@@ -405,8 +413,8 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 4 5.7 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.7-4-9s1.5-6.5 4-9z"/></svg>
     </div>
     <h1 class="screen-title">Official Website</h1>
-    <p>The OHND website is still in the garage. Check back after launch.</p>
-    <button class="btn-primary" id="websiteBtn" disabled>Coming Soon</button>
+    <p>Current series, schedules, race reports, broadcasts, liveries, and the shop. Everything OHND Racing in one place.</p>
+    <a class="btn-primary" id="websiteBtn" href="https://aaronfs5.wixsite.com/ohnd-2" target="_blank" rel="noopener noreferrer">Visit the Website</a>
   </section>
 
 </main>
