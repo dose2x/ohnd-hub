@@ -6,7 +6,7 @@ An installable PWA combining the OHND tools into one app:
 - **Dad Jokes** — 647 jokes, one button
 - **Would You Rather** — 370 dilemmas, one button
 - **Discord** — jump straight to the community
-- **Website** — links to the official [OHND Racing site](https://aaronfs5.wixsite.com/ohnd-2)
+- **Website** — opens the [Legend of OHND (GTA5)](https://aaronfs5.wixsite.com/ohnd-2/blank-4) page of the official OHND Racing site
 
 **Live:** https://dose2x.github.io/ohnd-hub/
 
